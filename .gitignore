@@ -95,3 +95,4 @@ infra/cloudflared/*.json
 archive.zip
 
 *.sql
+!model.pt
