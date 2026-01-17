@@ -1,0 +1,11 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cityissue-tunnel
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./config.yml:/etc/cloudflared/config.yml:ro
+      - ./7497793d-6aea-4cf0-bab5-9acad8018071.json:/etc/cloudflared/credentials.json:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

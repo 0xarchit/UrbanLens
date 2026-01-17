@@ -1,0 +1,19 @@
+best_weights: D:\B.Tech\ProjeX\18 City Issue\Model\urban_issues_yolov8\weights\best.pt
+classes:
+  0: Damaged Road Issues
+  1: Pothole Issues
+  2: Illegal Parking Issues
+  3: Broken Road Sign Issues
+  4: Fallen Trees
+  5: Littering/Garbage on Public Places
+  6: Vandalism Issues
+  7: Dead Animal Pollution
+  8: Damaged Concrete Structures
+  9: Damaged Electric Wires and Poles
+input_size: 512
+model_name: Urban Issues YOLOv8 Detector
+onnx_path: D:\B.Tech\ProjeX\18 City Issue\Model\urban_issues_yolov8\weights\best.onnx
+torchscript_path: D:\B.Tech\ProjeX\18 City Issue\Model\urban_issues_yolov8\weights\best.torchscript
+val_mAP50: 0.6326515134668689
+val_mAP50_95: 0.4215597456828397
+version: '1.0'

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Agent Pipeline | Mission Control</title>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-header: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --accent-primary: #0f172a;
+
+            --accent-blue: #2563eb;
+            --status-success: #10b981;
+            --status-error: #ef4444;
+            --status-warning: #f59e0b;
+            --metric-bg: #f1f5f9;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #0f172a;
+                --bg-card: #1e293b;
+                --bg-header: #1e293b;
+                --text-primary: #f8fafc;
+                --text-secondary: #94a3b8;
+                --border-color: #334155;
+                --accent-primary: #ffffff;
+                --accent-blue: #3b82f6;
+                --metric-bg: #334155;
+            }
+        }
+
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.2);
+
+            border-radius: 999px;
+            border: 2px solid transparent;
+
+            background-clip: content-box;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            outline: none;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .col {
+            flex-direction: column;
+        }
+
+        .row {
+            flex-direction: row;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        .font-bold {
+            font-weight: 600;
+        }
+
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+
+
+        header {
+            height: 60px;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            font-weight: 700;
+            font-size: 1.125rem;
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .brand-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--status-success);
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px var(--bg-header);
+        }
+
+        .status-badge {
+            background: var(--metric-bg);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+        }
+
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+
+            overflow: hidden;
+        }
+
+
+        .timeline-panel {
+            border-right: 1px solid var(--border-color);
+            background: var(--bg-body);
+            display: flex;
+            flex-direction: column;
+            overflow-y: hidden;
+
+        }
+
+        .form-section {
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .file-drop {
+            border: 2px dashed var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            position: relative;
+        }
+
+        .file-drop:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .file-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-preview {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .timeline-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+
+        .timeline-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+        }
+
+
+        .timeline-list::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 10px;
+            bottom: 20px;
+            width: 2px;
+            background: var(--border-color);
+            z-index: 0;
+            transition: height 0.3s;
+        }
+
+
+        .agent-node::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: -20px;
+            height: 20px;
+            width: 2px;
+            background: var(--accent-blue);
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .agent-node.completed+.agent-node .status-icon {}
+
+        .agent-node.completed::after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 32px;
+
+            height: calc(100% - 32px + 20px);
+
+            width: 2px;
+            background: var(--status-success);
+            z-index: 0;
+            opacity: 1;
+        }
+
+
+        .agent-node:last-child::after {
+            display: none;
+        }
+
+
+        .agent-node {
+            position: relative;
+            z-index: 1;
+            padding-left: 40px;
+            opacity: 0;
+            animation: slideIn 0.3s forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .status-icon {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .agent-node.running .status-icon {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .agent-node.completed .status-icon {
+            border-color: var(--status-success);
+            background: var(--status-success);
+            color: #fff;
+        }
+
+        .agent-node.error .status-icon {
+            border-color: var(--status-error);
+            background: var(--status-error);
+            color: #fff;
+        }
+
+        .agent-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .agent-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .agent-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .agent-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .agent-body {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-top: 0.5rem;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .metric-item {
+            background: var(--metric-bg);
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+
+        .detail-panel {
+            background: var(--bg-card);
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            min-height: 400px;
+        }
+
+        .preview-box {
+            border: 1px solid var(--border-color);
+            background: var(--metric-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-direction: column;
+        }
+
+        .preview-label {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            z-index: 10;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+
+        #original-preview,
+        #annotated-preview {
+            display: none;
+        }
+
+        #original-placeholder,
+        #annotated-placeholder {
+            display: flex;
+        }
+
+        .bounding-box-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .btn {
+            background: var(--accent-primary);
+            color: var(--bg-card);
+
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+
+        .log-section {
+            background: var(--metric-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .log-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        #raw-log {
+            white-space: pre-wrap;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="brand-dot"></div>
+            Autonomous Agent Control
+        </div>
+        <div class="status-badge" id="system-status">System Ready</div>
+    </header>
+
+    <main>
+        <!-- Left: Timeline -->
+        <div class="timeline-panel">
+            <div class="form-section">
+                <form id="issue-form" onsubmit="handleSubmit(event)">
+                    <div class="form-group">
+                        <label class="form-label">Evidence</label>
+                        <div class="file-drop">
+                            <input type="file" id="file" name="images" class="file-input" accept="image/*" required
+                                onchange="handleFileSelect(this)">
+                            <div class="text-xs text-secondary" id="file-label">Click to upload image</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="description" class="form-input"
+                            placeholder="e.g. Broken streetlight near park" value="Garbage pile near central market">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Lat</label>
+                            <input type="number" step="any" name="latitude" class="form-input" value="28.6304">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Lon</label>
+                            <input type="number" step="any" name="longitude" class="form-input" value="77.2177">
+                        </div>
+                    </div>
+
+                    <!-- Hidden Defaults -->
+                    <input type="hidden" name="platform" value="web-demo">
+                    <input type="hidden" name="device_model" value="AdminConsole">
+
+                    <button type="submit" class="btn" id="submit-btn">Report Issue</button>
+                </form>
+            </div>
+
+            <div class="timeline-scroll-area">
+                <h3 class="text-sm font-bold text-secondary"
+                    style="margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Execution Pipeline
+                </h3>
+                <div class="timeline-list" id="pipeline-container">
+                    <!-- Agents will be injected here -->
+                    <div class="text-center text-sm text-secondary" id="empty-state" style="padding: 2rem 0;">
+                        Submit an issue to start.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Visualization -->
+        <div class="detail-panel">
+            <section>
+                <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.25rem; font-weight: 600;">Live Intelligence</h2>
+                    <div id="issue-id-display" class="mono text-xs text-secondary">ID: Pending</div>
+                </div>
+
+                <div class="preview-grid">
+                    <!-- Original -->
+                    <div class="preview-box">
+                        <div class="preview-label">ORIGINAL EVIDENCE</div>
+                        <img id="original-preview" class="preview-img" src="" alt="Original">
+                        <div id="original-placeholder" class="text-secondary text-sm">
+                            <span>Awaiting Image...</span>
+                        </div>
+                    </div>
+
+                    <!-- Annotated -->
+                    <div class="preview-box">
+                        <div class="preview-label">AI DETECTION</div>
+                        <img id="annotated-preview" class="preview-img" src="" alt="Detected">
+                        <div id="annotated-placeholder" class="text-secondary text-sm">
+                            <span>Analysis Pending...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="log-section">
+                <div class="flex justify-between items-center" style="margin-bottom: 0.5rem;">
+                    <div class="log-title">System Logs</div>
+                    <button class="text-xs text-secondary" style="background:none; border:none; cursor:pointer;"
+                        onclick="clearLogs()">Clear</button>
+                </div>
+                <div id="raw-log" class="mono">Waiting for stream...</div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = window.location.origin;
+        const pipelineContainer = document.getElementById('pipeline-container');
+        const emptyState = document.getElementById('empty-state');
+        const rawLog = document.getElementById('raw-log');
+        let currentEventSource = null;
+
+        function handleFileSelect(input) {
+            const fileName = input.files[0]?.name || "Click to upload image";
+            document.getElementById('file-label').innerText = fileName;
+
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.getElementById('original-preview');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                document.getElementById('original-placeholder').style.display = 'none';
+
+
+                document.getElementById('annotated-preview').style.display = 'none';
+                document.getElementById('annotated-preview').src = '';
+                document.getElementById('annotated-placeholder').style.display = 'flex';
+                document.getElementById('annotated-placeholder').querySelector('span').innerText = 'Analysis Pending...';
+            }
+            if (input.files[0]) reader.readAsDataURL(input.files[0]);
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const form = document.getElementById('issue-form');
+
+            btn.disabled = true;
+            btn.innerText = 'Submitting...';
+
+
+            pipelineContainer.innerHTML = '';
+            rawLog.innerHTML = 'Submitting issue to backend...\n';
+            if (currentEventSource) currentEventSource.close();
+
+            try {
+                const formData = new FormData(form);
+
+                const response = await fetch(`${API_BASE}/issues/stream`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Submission failed');
+
+                const data = await response.json();
+
+                document.getElementById('issue-id-display').innerText = `ID: ${data.issue_id}`;
+                rawLog.innerHTML += `Issue Created [${data.issue_id}]\nConnecting to Agent Stream...\n`;
+
+                startStream(data.stream_url);
+                btn.innerText = 'Processing...';
+
+            } catch (err) {
+                console.error(err);
+                rawLog.innerHTML += `ERROR: ${err.message}\n`;
+                btn.disabled = false;
+                btn.innerText = 'Report Issue';
+            }
+        }
+
+        function startStream(url) {
+            const evtSource = new EventSource(url);
+            currentEventSource = evtSource;
+
+            document.getElementById('system-status').innerText = 'Active';
+            document.getElementById('system-status').style.borderColor = 'var(--status-warning)';
+            document.getElementById('system-status').style.color = 'var(--status-warning)';
+
+            evtSource.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                handleEvent(data);
+            };
+
+            evtSource.onerror = function (err) {
+                console.error("Stream ended or error:", err);
+                document.getElementById('system-status').innerText = 'Completed';
+                document.getElementById('system-status').style.borderColor = 'var(--status-success)';
+                document.getElementById('system-status').style.color = 'var(--status-success)';
+
+
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('submit-btn').innerText = 'Report New Issue';
+                evtSource.close();
+            };
+        }
+
+        function handleEvent(packet) {
+            if (emptyState) emptyState.style.display = 'none';
+
+            const type = packet.type;
+            const payload = packet.data || packet;
+
+
+            rawLog.innerHTML = `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${payload.agent_name || 'System'}\n` + rawLog.innerHTML;
+
+            if (type === 'connected') {
+
+                if (payload.current_steps) {
+                    payload.current_steps.forEach(step => {
+                        createAgentCard(step.agent_name);
+                        updateAgentCard({
+                            agent_name: step.agent_name,
+                            status: step.status,
+                            decision: step.decision,
+
+
+                        });
+                    });
+                }
+            } else if (type === 'step_started') {
+                createAgentCard(payload.agent_name);
+            } else if (type === 'step_completed') {
+                updateAgentCard(payload);
+                if (payload.agent_name === 'VisionAgent' && payload.result) {
+                    renderVisionUpdates(payload.result);
+                }
+            } else if (type === 'flow_completed') {
+                rawLog.innerHTML = `[DONE] Duration: ${payload.total_duration_ms}ms\n` + rawLog.innerHTML;
+            }
+        }
+
+        function createAgentCard(agentName) {
+            if (document.getElementById(`card-${agentName}`)) return;
+
+            const div = document.createElement('div');
+            div.className = 'agent-node running';
+            div.id = `card-${agentName}`;
+
+            div.innerHTML = `
+                <div class="status-icon"><div class="spinner"></div></div>
+                <div class="agent-card">
+                    <div class="agent-header">
+                        <div class="agent-title">${agentName}</div>
+                        <div class="agent-time">Running...</div>
+                    </div>
+                </div>
+            `;
+            pipelineContainer.appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateAgentCard(data) {
+            const card = document.getElementById(`card-${data.agent_name}`);
+            if (!card) return;
+
+            card.className = `agent-node ${data.error ? 'error' : 'completed'}`;
+            const icon = card.querySelector('.status-icon');
+            icon.innerHTML = data.error ? '✕' : '✓';
+
+            const cardBody = card.querySelector('.agent-card');
+            const decision = data.decision || "N/A";
+            const reasoning = data.reasoning || "";
+
+            let metricsHtml = '';
+            if (data.result) {
+                if (data.result.confidence) {
+                    metricsHtml += `<div class="metric-item"><div class="metric-label">Confidence</div><div class="metric-value">${(data.result.confidence * 100).toFixed(0)}%</div></div>`;
+                }
+                if (data.result.primary_category) {
+                    metricsHtml += `<div class="metric-item"><div class="metric-label">Category</div><div class="metric-value">${data.result.primary_category.value || data.result.primary_category}</div></div>`;
+                }
+                if (data.result.priority) {
+                    metricsHtml += `<div class="metric-item"><div class="metric-label">Priority</div><div class="metric-value">${data.result.priority}</div></div>`;
+                }
+                if (data.result.department) {
+                    metricsHtml += `<div class="metric-item"><div class="metric-label">Department</div><div class="metric-value">${data.result.department}</div></div>`;
+                }
+            }
+
+            cardBody.innerHTML = `
+                <div class="agent-header">
+                    <div class="agent-title">${data.agent_name}</div>
+                    <div class="agent-time">${data.duration_ms ? data.duration_ms.toFixed(0) + 'ms' : ''}</div>
+                </div>
+                <div class="agent-body">
+                    <strong>Decision:</strong> ${decision}<br/>
+                    <span class="text-secondary text-xs">${reasoning}</span>
+                </div>
+                ${metricsHtml ? `<div class="metric-grid">${metricsHtml}</div>` : ''}
+                ${data.error ? `<div class="text-xs text-error mt-2">${data.error}</div>` : ''}
+            `;
+        }
+
+        function renderVisionUpdates(result) {
+            const img = document.getElementById('annotated-preview');
+            const placeholder = document.getElementById('annotated-placeholder');
+
+
+            const url = (result.annotated_urls && result.annotated_urls.length > 0) ? result.annotated_urls[0]
+                : result.annotated_url;
+
+            if (url) {
+                img.src = url.startsWith('http') ? url : `${API_BASE}/${url}`;
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+            }
+        }
+
+        function clearLogs() { rawLog.innerHTML = 'Logs cleared.'; }
+
+    </script>
+</body>
+
+</html>

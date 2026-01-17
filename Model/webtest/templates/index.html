@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO Object Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Urban Issue Detection</h1>
+            <p>Upload an image to detect city issues using YOLOv8</p>
+        </header>
+
+        <main>
+            <div class="upload-section" id="drop-zone">
+                <input type="file" id="file-input" accept="image/*" hidden>
+                <div class="upload-content">
+                    <div class="icon">📁</div>
+                    <h3>Drag & Drop or Click to Upload</h3>
+                    <p>Supports JPG, PNG, JPEG</p>
+                </div>
+            </div>
+
+            <div class="preview-section hidden" id="preview-section">
+                <div class="card">
+                    <h3>Original</h3>
+                    <img id="original-image" alt="Original Upload">
+                </div>
+                <div class="card">
+                    <h3>Result</h3>
+                    <div id="loading-spinner" class="spinner hidden"></div>
+                    <img id="result-image" alt="Detection Result" class="hidden">
+                    <div id="stats" class="stats hidden"></div>
+                </div>
+            </div>
+            
+            <button id="reset-btn" class="hidden">Upload New Image</button>
+        </main>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>

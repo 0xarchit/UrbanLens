@@ -1,0 +1,9 @@
+tunnel: 7497793d-6aea-4cf0-bab5-9acad8018071
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: cityissue-back.0xarchit.is-a.dev
+    service: http://host.docker.internal:8000
+  - hostname: cityissue.0xarchit.is-a.dev
+    service: http://host.docker.internal:3000
+  - service: http_status:404

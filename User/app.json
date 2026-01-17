@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "City Issue Reporter",
+    "slug": "city-issue-reporter",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "cityissue",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cityissue.reporter",
+      "infoPlist": {
+        "NSCameraUsageDescription": "We need camera access to capture photos of city issues for reporting",
+        "NSLocationWhenInUseUsageDescription": "We need your location to accurately pinpoint reported issues",
+        "NSLocationAlwaysUsageDescription": "We need your location to accurately pinpoint reported issues"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      },
+      "package": "com.cityissue.reporter",
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow City Issue Reporter to access your camera to capture photos of issues."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow City Issue Reporter to use your location to accurately report issues."
+        }
+      ],
+      "expo-secure-store",
+      "@react-native-google-signin/google-signin",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}
