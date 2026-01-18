@@ -6,7 +6,6 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-import google.generativeai as genai
 
 from Backend.core.events import Event, event_bus
 from Backend.core.logging import get_logger
@@ -16,9 +15,6 @@ from Backend.orchestration.base import BaseAgent
 from Backend.services.email import email_service
 
 logger = get_logger(__name__, agent_name="NotificationAgent")
-
-if settings.gemini_api_key:
-    genai.configure(api_key=settings.gemini_api_key)
 
 
 class NotificationSent(Event):
@@ -32,10 +28,6 @@ class NotificationAgent(BaseAgent):
         super().__init__("NotificationAgent")
         self.db = db
         self.pending_notifications: list[dict] = []
-        if settings.gemini_api_key:
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
-        else:
-            self.model = None
 
     async def get_issue_with_classification(self, issue_id: UUID) -> Optional[Issue]:
         query = (
@@ -46,52 +38,21 @@ class NotificationAgent(BaseAgent):
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    async def format_issue_summary(self, issue: Issue) -> str:
-        if not self.model:
-            category = (
-                issue.classification.primary_category if issue.classification else "Unknown"
-            )
-            priority_map = {1: "CRITICAL", 2: "HIGH", 3: "MEDIUM", 4: "LOW"}
-            priority_str = priority_map.get(issue.priority, "UNKNOWN")
-            return (
-                f"Issue #{str(issue.id)[:8]}\n"
-                f"Category: {category}\n"
-                f"Priority: {priority_str}\n"
-                f"Location: ({issue.latitude:.4f}, {issue.longitude:.4f})\n"
-                f"Description: {issue.description or 'No description'}\n"
-                f"State: {issue.state}"
-            )
-        
+    def format_issue_summary(self, issue: Issue) -> str:
         category = (
             issue.classification.primary_category if issue.classification else "Unknown"
         )
         priority_map = {1: "CRITICAL", 2: "HIGH", 3: "MEDIUM", 4: "LOW"}
         priority_str = priority_map.get(issue.priority, "UNKNOWN")
-        
-        prompt = f"""Generate concise civic issue summary for notification (max 150 words):
 
-Issue ID: {str(issue.id)[:8]}
-Category: {category}
-Priority: {priority_str}
-State: {issue.state}
-Location: {issue.city or 'Unknown'}, ({issue.latitude:.4f}, {issue.longitude:.4f})
-Description: {issue.description[:200] if issue.description else 'No description'}
-
-Create professional, clear summary for stakeholders."""
-        
-        try:
-            response = self.model.generate_content(prompt)
-            return response.text.strip()
-        except Exception as e:
-            logger.error(f"Gemini summary generation failed: {e}")
-            return (
-                f"Issue #{str(issue.id)[:8]}\n"
-                f"Category: {category}\n"
-                f"Priority: {priority_str}\n"
-                f"Location: ({issue.latitude:.4f}, {issue.longitude:.4f})\n"
-                f"Description: {issue.description or 'No description'}\n"
-                f"State: {issue.state}"
-            )
+        return (
+            f"Issue #{str(issue.id)[:8]}\n"
+            f"Category: {category}\n"
+            f"Priority: {priority_str}\n"
+            f"Location: ({issue.latitude:.4f}, {issue.longitude:.4f})\n"
+            f"Description: {issue.description or 'No description'}\n"
+            f"State: {issue.state}"
+        )
 
     async def queue_notification(
         self,

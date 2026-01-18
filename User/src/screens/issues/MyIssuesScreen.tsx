@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,24 +7,24 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
-} from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { Card } from '../../components/ui/Card';
-import { IssueCard } from '../../components/issues/IssueCard';
-import { issueService } from '../../services/issueService';
-import { cacheService } from '../../services/cacheService';
-import { useAuth } from '../../context/AuthContext';
-import { colors, spacing, typography, borderRadius } from '../../theme';
-import { Issue } from '../../types';
+} from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { Card } from "../../components/ui/Card";
+import { IssueCard } from "../../components/issues/IssueCard";
+import { issueService } from "../../services/issueService";
+import { cacheService } from "../../services/cacheService";
+import { useAuth } from "../../context/AuthContext";
+import { colors, spacing, typography, borderRadius } from "../../theme";
+import { Issue } from "../../types";
 
 const ITEMS_PER_PAGE = 10;
 
 export function MyIssuesScreen() {
   const navigation = useNavigation<any>();
-  const { user } = useAuth();
-  
+  const { user, isDevMode } = useAuth();
+
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,31 +34,27 @@ export function MyIssuesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadIssuesWithCache();
-    }, [filter, user?.id])
+      loadIssues();
+    }, [filter, user?.id]),
   );
 
-  const loadIssuesWithCache = async () => {
-    const cached = await cacheService.getIssuesCache();
-    if (cached && cached.length > 0) {
-      setIssues(cached);
-      setLoading(false);
-    }
-    
+  const loadIssues = async () => {
+    setLoading(true);
+    await cacheService.clearCache();
     await fetchIssues(1, true);
   };
 
   const fetchIssues = async (pageNum: number, reset: boolean = false) => {
     try {
       const response = await issueService.listIssues(
-        pageNum, 
-        ITEMS_PER_PAGE, 
+        pageNum,
+        ITEMS_PER_PAGE,
         filter || undefined,
-        user?.id
+        isDevMode ? undefined : user?.id,
       );
-      
+
       const filtered = response.items;
-      
+
       if (reset) {
         setIssues(filtered);
         await cacheService.setIssuesCache(filtered);
@@ -67,11 +63,11 @@ export function MyIssuesScreen() {
         setIssues(newIssues);
         await cacheService.setIssuesCache(newIssues);
       }
-      
+
       setHasMore(response.items.length === ITEMS_PER_PAGE);
       setPage(pageNum);
     } catch (error) {
-      console.error('Failed to fetch issues:', error);
+      console.error("Failed to fetch issues:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -96,14 +92,16 @@ export function MyIssuesScreen() {
   };
 
   const handleIssuePress = (issue: Issue) => {
-    navigation.navigate('IssueDetail', { issueId: issue.id });
+    navigation.navigate("IssueDetail", { issueId: issue.id });
   };
 
   const filters = [
-    { key: null, label: 'All' },
-    { key: 'assigned', label: 'Assigned' },
-    { key: 'in_progress', label: 'In Progress' },
-    { key: 'resolved', label: 'Resolved' },
+    { key: null, label: "All" },
+    { key: "reported", label: "Reported" },
+    { key: "assigned", label: "Assigned" },
+    { key: "in_progress", label: "In Progress" },
+    { key: "pending_verification", label: "Review" },
+    { key: "resolved", label: "Resolved" },
   ];
 
   const renderHeader = () => (
@@ -126,16 +124,18 @@ export function MyIssuesScreen() {
 
   const renderFilters = () => (
     <View style={styles.filters}>
-      {filters.map(f => (
+      {filters.map((f) => (
         <TouchableOpacity
-          key={f.key || 'all'}
+          key={f.key || "all"}
           style={[styles.filterButton, filter === f.key && styles.filterActive]}
           onPress={() => setFilter(f.key)}
         >
-          <Text style={[
-            styles.filterText,
-            filter === f.key && styles.filterTextActive
-          ]}>
+          <Text
+            style={[
+              styles.filterText,
+              filter === f.key && styles.filterTextActive,
+            ]}
+          >
             {f.label}
           </Text>
         </TouchableOpacity>
@@ -145,10 +145,16 @@ export function MyIssuesScreen() {
 
   const renderEmpty = () => (
     <Card style={styles.emptyCard}>
-      <Ionicons name="documents-outline" size={48} color={colors.text.tertiary} />
+      <Ionicons
+        name="documents-outline"
+        size={48}
+        color={colors.text.tertiary}
+      />
       <Text style={styles.emptyTitle}>No Reports Found</Text>
       <Text style={styles.emptyText}>
-        {filter ? 'No issues match this filter' : 'You haven\'t reported any issues yet'}
+        {filter
+          ? "No issues match this filter"
+          : "You haven't reported any issues yet"}
       </Text>
     </Card>
   );
@@ -206,9 +212,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xxl * 2,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: spacing.lg,
   },
   backButton: {
@@ -216,23 +222,23 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: colors.background.tertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   refreshButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: colors.background.tertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
     ...typography.h2,
     color: colors.text.primary,
   },
   filters: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: spacing.lg,
     gap: spacing.sm,
   },
@@ -251,10 +257,10 @@ const styles = StyleSheet.create({
   },
   filterTextActive: {
     color: colors.text.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emptyCard: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: spacing.xl,
   },
   emptyTitle: {
@@ -266,10 +272,10 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.body,
     color: colors.text.secondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   footer: {
     paddingVertical: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
 });

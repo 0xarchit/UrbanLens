@@ -32,7 +32,7 @@ class VisionAgent(BaseAgent):
         super().__init__("VisionAgent")
         self.db = db
         if settings.gemini_api_key:
-            self.gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+            self.gemini_model = genai.GenerativeModel('gemma-3-27b-it')
         else:
             self.gemini_model = None
     

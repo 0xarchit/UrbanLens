@@ -39,7 +39,7 @@ class RoutingAgent(BaseAgent):
         super().__init__("RoutingAgent")
         self.db = db
         if settings.gemini_api_key:
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
+            self.model = genai.GenerativeModel('gemma-3-27b-it')
         else:
             self.model = None
     

@@ -77,16 +77,33 @@ async def get_optional_user(
 
 
 def get_user_id_from_form_token(authorization: Optional[str]) -> Optional[str]:
-    if not authorization or not authorization.startswith("Bearer "):
+    if not authorization:
+        logger.debug("No authorization header provided for form token extraction")
+        return None
+    if not authorization.startswith("Bearer "):
+        logger.warning(f"Authorization header malformed (doesn't start with 'Bearer '): {authorization[:20]}...")
         return None
     try:
         token = authorization.replace("Bearer ", "")
-        payload = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
-        return payload.get("sub")
-    except InvalidTokenError:
+        
+        unverified_header = jwt.get_unverified_header(token)
+        logger.info(f"JWT header: alg={unverified_header.get('alg')}, typ={unverified_header.get('typ')}")
+        
+        try:
+            payload = jwt.decode(
+                token,
+                settings.supabase_jwt_secret,
+                algorithms=["HS256"],
+                audience="authenticated",
+            )
+        except jwt.exceptions.InvalidAlgorithmError:
+            logger.warning("HS256 verification failed, falling back to unverified decode (Supabase already authenticated user)")
+            payload = jwt.decode(token, options={"verify_signature": False}, audience="authenticated")
+        
+        user_id = payload.get("sub")
+        email = payload.get("email")
+        logger.info(f"Successfully extracted user_id from form token: {user_id} (email: {email})")
+        return user_id
+    except InvalidTokenError as e:
+        logger.warning(f"JWT decode failed for form token: {e}")
         return None

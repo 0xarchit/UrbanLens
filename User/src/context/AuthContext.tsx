@@ -1,9 +1,15 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../config/supabase';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { Session, User } from "@supabase/supabase-js";
+import { CONFIG_ERROR, supabase } from "../config/supabase";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -12,6 +18,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isDevMode: boolean;
+  configError: string | null;
   signInWithGoogle: () => Promise<void>;
   continueWithDevMode: () => void;
   signOut: () => Promise<void>;
@@ -28,15 +35,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDevMode, setIsDevMode] = useState(false);
+  const [configError] = useState<string | null>(CONFIG_ERROR);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -49,16 +64,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signInWithGoogle = async () => {
     try {
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       const redirectUri = makeRedirectUri({
-        scheme: 'cityissue',
-        path: 'auth/callback',
+        scheme: "cityissue",
+        path: "auth/callback",
       });
-      
-      console.log('OAuth redirect URI:', redirectUri);
-      
+
+      console.log("OAuth redirect URI:", redirectUri);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: redirectUri,
           skipBrowserRedirect: true,
@@ -66,54 +85,57 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       if (error) throw error;
-      
+
       if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-        
-        console.log('OAuth result:', result.type);
-        
-        if (result.type === 'success' && result.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUri,
+        );
+
+        console.log("OAuth result:", result.type);
+
+        if (result.type === "success" && result.url) {
           const url = new URL(result.url);
-          
-          let accessToken = url.searchParams.get('access_token');
-          let refreshToken = url.searchParams.get('refresh_token');
-          
+
+          let accessToken = url.searchParams.get("access_token");
+          let refreshToken = url.searchParams.get("refresh_token");
+
           if (!accessToken && url.hash) {
             const hashParams = new URLSearchParams(url.hash.substring(1));
-            accessToken = hashParams.get('access_token');
-            refreshToken = hashParams.get('refresh_token');
+            accessToken = hashParams.get("access_token");
+            refreshToken = hashParams.get("refresh_token");
           }
-          
-          console.log('Got tokens:', !!accessToken, !!refreshToken);
-          
+
+          console.log("Got tokens:", !!accessToken, !!refreshToken);
+
           if (accessToken && refreshToken) {
-            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            
+            const { data: sessionData, error: sessionError } =
+              await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+
             if (sessionError) throw sessionError;
-            
+
             setSession(sessionData.session);
             setUser(sessionData.session?.user ?? null);
           }
         }
       }
     } catch (error) {
-      console.error('Google sign in error:', error);
+      console.error("Google sign in error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-
   const continueWithDevMode = () => {
     const devUser: User = {
-      id: 'dev-user-123',
-      email: 'dev@cityissue.local',
+      id: "dev-user-123",
+      email: "dev@cityissue.local",
       app_metadata: {},
-      user_metadata: { full_name: 'Dev User' },
-      aud: 'authenticated',
+      user_metadata: { full_name: "Dev User" },
+      aud: "authenticated",
       created_at: new Date().toISOString(),
     };
     setUser(devUser);
@@ -124,21 +146,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     try {
       setLoading(true);
-      if (!isDevMode) {
+      if (!isDevMode && supabase) {
         await supabase.auth.signOut();
       }
       setUser(null);
       setSession(null);
       setIsDevMode(false);
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error("Sign out error:", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isDevMode, signInWithGoogle, continueWithDevMode, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        isDevMode,
+        configError,
+        signInWithGoogle,
+        continueWithDevMode,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -147,7 +180,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

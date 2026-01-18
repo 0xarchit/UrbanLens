@@ -111,6 +111,14 @@ class IssueCreate(BaseModel):
     platform: str = Field(..., max_length=50)
     device_model: Optional[str] = Field(None, max_length=100)
 
+    @field_validator("description")
+    @classmethod
+    def clean_description(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        cleaned = v.strip()
+        return cleaned or None
+
 
 class AgentOutput(BaseModel):
     agent: str

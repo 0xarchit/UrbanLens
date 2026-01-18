@@ -1,6 +1,9 @@
 "use client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) {
+  throw new Error("Missing NEXT_PUBLIC_API_URL");
+}
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_RETRIES = 2;
 
@@ -16,7 +19,7 @@ class ApiError extends Error {
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
-  timeout: number
+  timeout: number,
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -35,10 +38,11 @@ async function fetchWithTimeout(
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
-  retries = 0
+  retries = 0,
 ): Promise<T> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -49,7 +53,7 @@ export async function apiRequest<T>(
     const res = await fetchWithTimeout(
       `${API_URL}${endpoint}`,
       { ...options, headers },
-      REQUEST_TIMEOUT_MS
+      REQUEST_TIMEOUT_MS,
     );
 
     if (res.status === 401 || res.status === 403) {
@@ -104,7 +108,10 @@ export async function apiPost<T>(endpoint: string, body?: unknown): Promise<T> {
   });
 }
 
-export async function apiPatch<T>(endpoint: string, body?: unknown): Promise<T> {
+export async function apiPatch<T>(
+  endpoint: string,
+  body?: unknown,
+): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: "PATCH",
     body: body ? JSON.stringify(body) : undefined,

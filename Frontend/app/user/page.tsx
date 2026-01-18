@@ -5,7 +5,8 @@ import { useAuth } from "@/components/AuthProvider";
 import { apiGet } from "@/lib/api";
 import { Smartphone, FileText, MapPin } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) throw new Error("Missing NEXT_PUBLIC_API_URL");
 
 interface Issue {
   id: string;
@@ -30,11 +31,11 @@ export default function UserDashboard() {
 
   useEffect(() => {
     if (!authLoading) {
-       if (role !== "user") {
-          router.push("/signin"); 
-          return;
-       }
-       if (user) fetchIssues(user.id);
+      if (role !== "user") {
+        router.push("/signin");
+        return;
+      }
+      if (user) fetchIssues(user.id);
     }
   }, [authLoading, role, router, user]);
 
@@ -62,7 +63,9 @@ export default function UserDashboard() {
       closed: "bg-slate-100 text-slate-600",
     };
     return (
-      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${styles[state] || styles.reported}`}>
+      <span
+        className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${styles[state] || styles.reported}`}
+      >
         {state.replace("_", " ").toUpperCase()}
       </span>
     );
@@ -87,7 +90,9 @@ export default function UserDashboard() {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-slate-900">{user?.user_metadata?.full_name || user?.email || "User"}</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {user?.user_metadata?.full_name || user?.email || "User"}
+                </p>
                 <p className="text-xs text-slate-500">{user?.email}</p>
               </div>
               <button
@@ -107,39 +112,61 @@ export default function UserDashboard() {
             <Smartphone className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-blue-900 font-bold text-lg mb-1">Make a New Report</h3>
+            <h3 className="text-blue-900 font-bold text-lg mb-1">
+              Make a New Report
+            </h3>
             <p className="text-blue-700 leading-relaxed">
-              To ensure data accuracy and GPS verification, new issues must be reported through the official <strong>City Issue Mobile App</strong>.
+              To ensure data accuracy and GPS verification, new issues must be
+              reported through the official{" "}
+              <strong>City Issue Mobile App</strong>.
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-            <p className="text-slate-500 text-sm font-medium uppercase tracking-wide">Total Reports</p>
-            <p className="text-3xl font-extrabold text-slate-900 mt-2">{issues.length}</p>
+            <p className="text-slate-500 text-sm font-medium uppercase tracking-wide">
+              Total Reports
+            </p>
+            <p className="text-3xl font-extrabold text-slate-900 mt-2">
+              {issues.length}
+            </p>
           </div>
           <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-            <p className="text-slate-500 text-sm font-medium uppercase tracking-wide">Resolved</p>
+            <p className="text-slate-500 text-sm font-medium uppercase tracking-wide">
+              Resolved
+            </p>
             <p className="text-3xl font-extrabold text-emerald-600 mt-2">
               {issues.filter((i) => i.state === "resolved").length}
             </p>
           </div>
           <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-            <p className="text-slate-500 text-sm font-medium uppercase tracking-wide">In Progress</p>
+            <p className="text-slate-500 text-sm font-medium uppercase tracking-wide">
+              In Progress
+            </p>
             <p className="text-3xl font-extrabold text-amber-500 mt-2">
-              {issues.filter((i) => ["assigned", "in_progress"].includes(i.state)).length}
+              {
+                issues.filter((i) =>
+                  ["assigned", "in_progress"].includes(i.state),
+                ).length
+              }
             </p>
           </div>
         </div>
 
-        <h2 className="text-xl font-bold text-slate-900 mb-6">Recent Activity</h2>
+        <h2 className="text-xl font-bold text-slate-900 mb-6">
+          Recent Activity
+        </h2>
 
         {issues.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border border-slate-200 shadow-sm">
             <FileText className="w-12 h-12 mx-auto text-slate-300" />
-            <p className="text-slate-900 font-medium text-lg mt-4">No reports submitted yet</p>
-            <p className="text-slate-500 mt-2">Download the mobile app to start contributing to your city.</p>
+            <p className="text-slate-900 font-medium text-lg mt-4">
+              No reports submitted yet
+            </p>
+            <p className="text-slate-500 mt-2">
+              Download the mobile app to start contributing to your city.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -152,26 +179,29 @@ export default function UserDashboard() {
                   <div className="flex items-center gap-3">
                     {getStateBadge(issue.state)}
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wide px-2 border-l border-slate-200">
-                      {issue.classification?.primary_category || issue.primary_category || "General Issue"}
+                      {issue.classification?.primary_category ||
+                        issue.primary_category ||
+                        "General Issue"}
                     </span>
                   </div>
                   <span className="text-sm text-slate-400 font-medium">
                     {new Date(issue.created_at).toLocaleDateString(undefined, {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric'
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
                     })}
                   </span>
                 </div>
-                
+
                 <h3 className="text-lg font-bold text-slate-900 mb-2">
-                   {issue.description || "No description provided"}
+                  {issue.description || "No description provided"}
                 </h3>
-                
+
                 <div className="flex items-center gap-2 text-sm text-slate-500">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-4 h-4 text-slate-400" />
-                    {issue.locality ? `${issue.locality}, ` : ""}{issue.city}
+                    {issue.locality ? `${issue.locality}, ` : ""}
+                    {issue.city}
                   </span>
                 </div>
               </div>

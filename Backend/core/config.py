@@ -53,8 +53,10 @@ class Settings(BaseSettings):
     project_id: Optional[str] = None
     sender_email: str = "noreply@urbanlens.city"
     admin_email: str = "admin@urbanlens.city"
+
+    frontend_url: Optional[str] = None
     
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = []
     jwt_algorithm: str = "HS256"
     jwt_expire_hours: int = 24
     

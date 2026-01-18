@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -8,23 +8,25 @@ import {
   Dimensions,
   Alert,
   ScrollView,
-} from 'react-native';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
-import { issueService } from '../../services/issueService';
-import { useAuth } from '../../context/AuthContext';
-import { colors, spacing, typography, borderRadius } from '../../theme';
-import { LocationData, FlowStep } from '../../types';
+} from "react-native";
+import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { issueService } from "../../services/issueService";
+import { cacheService } from "../../services/cacheService";
+import { useAuth } from "../../context/AuthContext";
+import { colors, spacing, typography, borderRadius } from "../../theme";
+import { LocationData, FlowStep } from "../../types";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 type ProcessingRouteParams = {
   Processing: {
     imageUri: string;
     location: LocationData;
+    description?: string;
   };
 };
 
@@ -32,35 +34,72 @@ interface AgentStep {
   name: string;
   iconName: keyof typeof Ionicons.glyphMap;
   label: string;
-  status: 'pending' | 'running' | 'done' | 'error';
+  status: "pending" | "running" | "done" | "error";
   decision?: string;
   reasoning?: string;
 }
 
 const initialAgents: AgentStep[] = [
-  { name: 'LocationStep', iconName: 'location', label: 'Verifying Location', status: 'pending' },
-  { name: 'UploadStep', iconName: 'cloud-upload', label: 'Secure Upload', status: 'pending' },
-  { name: 'VisionAgent', iconName: 'eye', label: 'Vision Agent', status: 'pending' },
-  { name: 'GeoDeduplicateAgent', iconName: 'map', label: 'Geo Agent', status: 'pending' },
-  { name: 'PriorityAgent', iconName: 'alert-circle', label: 'Priority Agent', status: 'pending' },
-  { name: 'RoutingAgent', iconName: 'git-branch', label: 'Routing Agent', status: 'pending' },
-  { name: 'NotificationAgent', iconName: 'notifications', label: 'Notification Agent', status: 'pending' },
+  {
+    name: "LocationStep",
+    iconName: "location",
+    label: "Verifying Location",
+    status: "pending",
+  },
+  {
+    name: "UploadStep",
+    iconName: "cloud-upload",
+    label: "Secure Upload",
+    status: "pending",
+  },
+  {
+    name: "VisionAgent",
+    iconName: "eye",
+    label: "Vision Agent",
+    status: "pending",
+  },
+  {
+    name: "GeoDeduplicateAgent",
+    iconName: "map",
+    label: "Geo Agent",
+    status: "pending",
+  },
+  {
+    name: "PriorityAgent",
+    iconName: "alert-circle",
+    label: "Priority Agent",
+    status: "pending",
+  },
+  {
+    name: "RoutingAgent",
+    iconName: "git-branch",
+    label: "Routing Agent",
+    status: "pending",
+  },
+  {
+    name: "NotificationAgent",
+    iconName: "notifications",
+    label: "Notification Agent",
+    status: "pending",
+  },
 ];
 
 export function ProcessingScreen() {
-  const route = useRoute<RouteProp<ProcessingRouteParams, 'Processing'>>();
+  const route = useRoute<RouteProp<ProcessingRouteParams, "Processing">>();
   const navigation = useNavigation<any>();
   const { session } = useAuth();
-  
-  const { imageUri, location } = route.params;
-  
+
+  const { imageUri, location, description } = route.params;
+
   const [agents, setAgents] = useState<AgentStep[]>(initialAgents);
   const [issueId, setIssueId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
-  
+
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnims = useRef(initialAgents.map(() => new Animated.Value(1))).current;
+  const pulseAnims = useRef(
+    initialAgents.map(() => new Animated.Value(1)),
+  ).current;
 
   useEffect(() => {
     submitIssue();
@@ -78,10 +117,7 @@ export function ProcessingScreen() {
           (event) => {
             handleStreamEvent(event);
           },
-          (err) => {
-            
-            
-          }
+          (err) => {},
         );
       } catch (e) {
         console.error("Failed to connect to stream", e);
@@ -96,74 +132,80 @@ export function ProcessingScreen() {
   }, [issueId]);
 
   const handleStreamEvent = (event: any) => {
-    if (event.type === 'step_started') {
+    if (event.type === "step_started") {
       const { agent_name } = event.data;
       setAgents((prev) =>
         prev.map((a) =>
-          a.name === agent_name ? { ...a, status: 'running' } : a
-        )
+          a.name === agent_name ? { ...a, status: "running" } : a,
+        ),
       );
-      
-      const idx = agents.findIndex(a => a.name === agent_name);
+
+      const idx = agents.findIndex((a) => a.name === agent_name);
       if (idx !== -1) {
         pulseAnims[idx].setValue(1);
         Animated.loop(
           Animated.sequence([
-            Animated.timing(pulseAnims[idx], { toValue: 1.1, duration: 500, useNativeDriver: true }),
-            Animated.timing(pulseAnims[idx], { toValue: 1, duration: 500, useNativeDriver: true }),
-          ])
+            Animated.timing(pulseAnims[idx], {
+              toValue: 1.1,
+              duration: 500,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pulseAnims[idx], {
+              toValue: 1,
+              duration: 500,
+              useNativeDriver: true,
+            }),
+          ]),
         ).start();
       }
-
-    } else if (event.type === 'step_completed') {
+    } else if (event.type === "step_completed") {
       const { agent_name, decision, reasoning, result } = event.data;
-      
+
       setAgents((prev) =>
         prev.map((a) =>
           a.name === agent_name
-            ? { ...a, status: 'done', decision, reasoning }
-            : a
-        )
+            ? { ...a, status: "done", decision, reasoning }
+            : a,
+        ),
       );
 
-      const idx = agents.findIndex(a => a.name === agent_name);
+      const idx = agents.findIndex((a) => a.name === agent_name);
       if (idx !== -1) {
-         pulseAnims[idx].stopAnimation();
-         pulseAnims[idx].setValue(1);
-      }
-      
-      if (agent_name === 'VisionAgent' && result?.needs_confirmation) {
-          showConfirmationDialog();
+        pulseAnims[idx].stopAnimation();
+        pulseAnims[idx].setValue(1);
       }
 
-    } else if (event.type === 'flow_completed') {
+      if (agent_name === "VisionAgent" && result?.needs_confirmation) {
+        showConfirmationDialog();
+      }
+    } else if (event.type === "flow_completed") {
       setIsComplete(true);
       Animated.timing(progressAnim, {
         toValue: 1,
         duration: 300,
         useNativeDriver: false,
       }).start();
-      
+
       if (event.data.final_result?.needs_confirmation) {
-          setIsComplete(false);
-          showConfirmationDialog();
+        setIsComplete(false);
+        showConfirmationDialog();
       }
-    } else if (event.type === 'flow_error') {
-        setError(event.data.error || 'Unknown error');
+    } else if (event.type === "flow_error") {
+      setError(event.data.error || "Unknown error");
     }
   };
 
   useEffect(() => {
-     const doneCount = agents.filter(a => a.status === 'done').length;
-     const runningCount = agents.filter(a => a.status === 'running').length;
-     const total = agents.length;
-     
-     const progress = (doneCount + (runningCount ? 0.5 : 0)) / total;
-     Animated.timing(progressAnim, {
-        toValue: progress,
-        duration: 500,
-        useNativeDriver: false,
-      }).start();
+    const doneCount = agents.filter((a) => a.status === "done").length;
+    const runningCount = agents.filter((a) => a.status === "running").length;
+    const total = agents.length;
+
+    const progress = (doneCount + (runningCount ? 0.5 : 0)) / total;
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
   }, [agents]);
 
   const showConfirmationDialog = () => {
@@ -181,7 +223,7 @@ export function ProcessingScreen() {
             } catch (e) {
               console.error(e);
             }
-          }
+          },
         },
         {
           text: "Submit for Manual Review",
@@ -195,45 +237,47 @@ export function ProcessingScreen() {
             } catch (e) {
               setError("Failed to confirm issue");
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
   const submitIssue = async () => {
     try {
+      console.log("[ProcessingScreen] Submitting issue - session present:", !!session, "access_token present:", !!session?.access_token);
       const result = await issueService.createIssue(
         imageUri,
         location,
-        undefined,
-        session?.access_token
+        description,
+        session?.access_token,
       );
-      
+
       setIssueId(result.issue_id);
-      
     } catch (err: any) {
-      console.error('Submit error:', err);
-      setError(err.message || 'Failed to submit issue');
+      console.error("Submit error:", err);
+      setError(err.message || "Failed to submit issue");
     }
   };
 
-  const handleViewDetails = () => {
+  const handleViewDetails = async () => {
     if (issueId) {
-      navigation.navigate('IssueDetail', { issueId });
+      await cacheService.clearCache();
+      navigation.navigate("IssueDetail", { issueId });
     }
   };
 
-  const handleGoHome = () => {
+  const handleGoHome = async () => {
+    await cacheService.clearCache();
     navigation.reset({
       index: 0,
-      routes: [{ name: 'MainTabs' }],
+      routes: [{ name: "MainTabs" }],
     });
   };
 
   const progressInterpolate = progressAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
+    outputRange: ["0%", "100%"],
   });
 
   return (
@@ -243,23 +287,26 @@ export function ProcessingScreen() {
     >
       <View style={styles.header}>
         <View style={styles.headerIcon}>
-           {isComplete ? (
+          {isComplete ? (
             <Ionicons name="sparkles" size={32} color={colors.secondary.main} />
           ) : (
-            <MaterialCommunityIcons name="robot" size={32} color={colors.primary.main} />
+            <MaterialCommunityIcons
+              name="robot"
+              size={32}
+              color={colors.primary.main}
+            />
           )}
         </View>
         <Text style={styles.title}>
-          {isComplete ? 'Issue Submitted!' : 'AI Processing...'}
+          {isComplete ? "Issue Submitted!" : "AI Processing..."}
         </Text>
         <Text style={styles.subtitle}>
-          {isComplete 
-            ? 'Your report has been routed to the right team'
-            : 'Our agents are analyzing your report'
-          }
+          {isComplete
+            ? "Your report has been routed to the right team"
+            : "Our agents are analyzing your report"}
         </Text>
       </View>
-      
+
       <View style={styles.imageContainer}>
         <Image source={{ uri: imageUri }} style={styles.image} />
         {!isComplete && (
@@ -268,20 +315,17 @@ export function ProcessingScreen() {
           </View>
         )}
       </View>
-      
+
       <View style={styles.progressContainer}>
         <View style={styles.progressTrack}>
           <Animated.View
-            style={[
-              styles.progressFill,
-              { width: progressInterpolate },
-            ]}
+            style={[styles.progressFill, { width: progressInterpolate }]}
           />
         </View>
       </View>
-      
-      <ScrollView 
-        style={styles.agentsContainer} 
+
+      <ScrollView
+        style={styles.agentsContainer}
         contentContainerStyle={{ paddingBottom: spacing.xxl }}
         showsVerticalScrollIndicator={false}
       >
@@ -292,41 +336,70 @@ export function ProcessingScreen() {
               styles.agentRow,
               {
                 transform: [{ scale: pulseAnims[index] }],
-                opacity: agent.status === 'pending' ? 0.6 : 1, 
-                backgroundColor: agent.status === 'running' ? 'rgba(33, 150, 243, 0.1)' : 'rgba(255,255,255,0.05)',
-                borderColor: agent.status === 'running' ? colors.primary.main : 'transparent',
+                opacity: agent.status === "pending" ? 0.6 : 1,
+                backgroundColor:
+                  agent.status === "running"
+                    ? "rgba(33, 150, 243, 0.1)"
+                    : "rgba(255,255,255,0.05)",
+                borderColor:
+                  agent.status === "running"
+                    ? colors.primary.main
+                    : "transparent",
                 borderWidth: 1,
               },
             ]}
           >
-            <View style={[
-              styles.agentIcon,
-              agent.status === 'done' && styles.agentIconDone,
-              agent.status === 'running' && styles.agentIconRunning,
-            ]}>
-              {agent.status === 'done' ? (
-                <Ionicons name="checkmark-circle" size={24} color={colors.secondary.main} />
+            <View
+              style={[
+                styles.agentIcon,
+                agent.status === "done" && styles.agentIconDone,
+                agent.status === "running" && styles.agentIconRunning,
+              ]}
+            >
+              {agent.status === "done" ? (
+                <Ionicons
+                  name="checkmark-circle"
+                  size={24}
+                  color={colors.secondary.main}
+                />
               ) : (
-                <Ionicons name={agent.iconName} size={24} color={agent.status === 'running' ? colors.primary.main : colors.text.secondary} />
+                <Ionicons
+                  name={agent.iconName}
+                  size={24}
+                  color={
+                    agent.status === "running"
+                      ? colors.primary.main
+                      : colors.text.secondary
+                  }
+                />
               )}
             </View>
-            
+
             <View style={styles.agentInfo}>
-              <Text style={[
-                  styles.agentLabel, 
-                  agent.status === 'running' && { color: colors.primary.main, fontWeight: '700' }
-              ]}>{agent.label}</Text>
-              
+              <Text
+                style={[
+                  styles.agentLabel,
+                  agent.status === "running" && {
+                    color: colors.primary.main,
+                    fontWeight: "700",
+                  },
+                ]}
+              >
+                {agent.label}
+              </Text>
+
               {agent.decision ? (
                 <Text style={styles.agentDecision}>{agent.decision}</Text>
               ) : null}
-              
+
               {agent.reasoning ? (
-                 <Text style={styles.agentReasoning} numberOfLines={2}>{agent.reasoning}</Text>
+                <Text style={styles.agentReasoning} numberOfLines={2}>
+                  {agent.reasoning}
+                </Text>
               ) : null}
             </View>
-            
-            {agent.status === 'running' && (
+
+            {agent.status === "running" && (
               <View style={styles.spinner}>
                 <Ionicons name="sync" size={16} color={colors.primary.main} />
               </View>
@@ -334,11 +407,15 @@ export function ProcessingScreen() {
           </Animated.View>
         ))}
       </ScrollView>
-      
+
       {error && (
         <Card style={styles.errorCard}>
-           <View style={styles.errorContent}>
-            <Ionicons name="close-circle" size={20} color={colors.status.error} />
+          <View style={styles.errorContent}>
+            <Ionicons
+              name="close-circle"
+              size={20}
+              color={colors.status.error}
+            />
             <Text style={styles.errorText}>{error}</Text>
           </View>
           <Button
@@ -349,14 +426,10 @@ export function ProcessingScreen() {
           />
         </Card>
       )}
-      
+
       {isComplete && (
         <View style={styles.actions}>
-           <Button
-            title="View Details"
-            onPress={handleViewDetails}
-            fullWidth
-          />
+          <Button title="View Details" onPress={handleViewDetails} fullWidth />
           <Button
             title="Report Another"
             variant="outline"
@@ -378,15 +451,15 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
   headerIcon: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(255,255,255,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: spacing.sm,
   },
   title: {
@@ -397,31 +470,31 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.body,
     color: colors.text.secondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   imageContainer: {
     height: 180,
     borderRadius: borderRadius.lg,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: colors.background.card,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: "rgba(255,255,255,0.1)",
   },
   image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
   },
   scanLine: {
     height: 2,
     backgroundColor: colors.primary.main,
-    width: '100%',
+    width: "100%",
     shadowColor: colors.primary.main,
     shadowOpacity: 0.8,
     shadowRadius: 10,
@@ -432,12 +505,12 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 3,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressFill: {
-    height: '100%',
+    height: "100%",
     backgroundColor: colors.primary.main,
     borderRadius: 3,
   },
@@ -445,8 +518,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   agentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: spacing.md,
     borderRadius: borderRadius.md,
     marginBottom: spacing.sm,
@@ -455,33 +528,33 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: spacing.md,
   },
   agentIconDone: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
   },
   agentIconRunning: {
-     backgroundColor: 'rgba(33, 150, 243, 0.1)',
+    backgroundColor: "rgba(33, 150, 243, 0.1)",
   },
   agentInfo: {
     flex: 1,
   },
   agentLabel: {
     ...typography.bodySmall,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text.primary,
     marginBottom: 2,
   },
   agentDecision: {
     ...typography.caption,
     color: colors.secondary.main,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   agentReasoning: {
-     ...typography.caption,
+    ...typography.caption,
     color: colors.text.tertiary,
     marginTop: 2,
   },
@@ -490,12 +563,12 @@ const styles = StyleSheet.create({
   },
   errorCard: {
     marginTop: spacing.md,
-    backgroundColor: 'rgba(244, 67, 54, 0.1)',
-    borderColor: 'rgba(244, 67, 54, 0.3)',
+    backgroundColor: "rgba(244, 67, 54, 0.1)",
+    borderColor: "rgba(244, 67, 54, 0.3)",
   },
   errorContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: spacing.md,
   },
   errorText: {

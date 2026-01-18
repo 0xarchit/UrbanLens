@@ -20,6 +20,9 @@ from Backend.agents import (
 )
 from Backend.utils.storage import get_upload_url
 from Backend.core.auth import get_user_id_from_form_token
+from Backend.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -373,6 +376,7 @@ async def create_issue_with_stream(
     db: AsyncSession = Depends(get_db),
 ):
     user_id = get_user_id_from_form_token(authorization)
+    logger.info(f"[/stream] Creating issue - user_id: {user_id}, authorization_present: {bool(authorization)}")
     
     data = IssueCreate(
         description=description,
@@ -385,6 +389,7 @@ async def create_issue_with_stream(
     
     ingestion = IngestionService(db)
     issue, image_paths = await ingestion.create_issue(data, images, user_id)
+    logger.info(f"[/stream] Issue created: {issue.id} with user_id: {issue.user_id}")
     
     
     await db.commit()

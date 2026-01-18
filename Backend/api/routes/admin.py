@@ -374,7 +374,7 @@ async def invite_member(
     if data.send_invite:
         invite_result = await supabase_auth.invite_user(
             email=data.email,
-            redirect_to="http://localhost:8000/dashboard"
+            redirect_to=f"{settings.frontend_url}/auth/callback"
         )
     
     member = Member(
@@ -470,9 +470,12 @@ async def send_member_invite(
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
     
+    if not settings.frontend_url:
+        raise HTTPException(status_code=500, detail="FRONTEND_URL not configured")
+
     result = await supabase_auth.invite_user(
         email=member.email,
-        redirect_to="http://localhost:8000/dashboard"
+        redirect_to=f"{settings.frontend_url}/auth/callback"
     )
     
     if result.get("success"):
@@ -498,9 +501,12 @@ async def send_magic_link(
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
     
+    if not settings.frontend_url:
+        raise HTTPException(status_code=500, detail="FRONTEND_URL not configured")
+
     result = await supabase_auth.send_magic_link(
         email=member.email,
-        redirect_to="http://localhost:8000/dashboard"
+        redirect_to=f"{settings.frontend_url}/auth/callback"
     )
     
     if result.get("success"):

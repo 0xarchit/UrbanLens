@@ -6,7 +6,8 @@ import { createClient } from "@supabase/supabase-js";
 import { useAuth } from "@/components/AuthProvider";
 import { HardHat, ShieldCheck, AlertTriangle } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) throw new Error("Missing NEXT_PUBLIC_API_URL");
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
@@ -18,7 +19,7 @@ type StaffRole = "admin" | "worker";
 export default function SignInPage() {
   const { role } = useAuth();
   const router = useRouter();
-  
+
   const [loginType, setLoginType] = useState<LoginType>("user");
   const [staffRole, setStaffRole] = useState<StaffRole>("worker");
   const [email, setEmail] = useState("");
@@ -54,8 +55,8 @@ export default function SignInPage() {
       const data = await res.json();
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      
-      window.location.reload(); 
+
+      window.location.reload();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);
@@ -68,7 +69,9 @@ export default function SignInPage() {
     try {
       await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=/user` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/user`,
+        },
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed";
@@ -81,8 +84,12 @@ export default function SignInPage() {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <nav className="px-8 py-6 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-slate-800">CityIssue</Link>
-          <span className="text-sm text-slate-500 font-medium">Secure Login</span>
+          <Link href="/" className="text-2xl font-bold text-slate-800">
+            CityIssue
+          </Link>
+          <span className="text-sm text-slate-500 font-medium">
+            Secure Login
+          </span>
         </div>
       </nav>
 
@@ -97,7 +104,9 @@ export default function SignInPage() {
             <button
               onClick={() => setLoginType("user")}
               className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                loginType === "user" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                loginType === "user"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
               Citizen
@@ -105,7 +114,9 @@ export default function SignInPage() {
             <button
               onClick={() => setLoginType("staff")}
               className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                loginType === "staff" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                loginType === "staff"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
               Staff
@@ -126,11 +137,16 @@ export default function SignInPage() {
                 disabled={loading}
                 className="w-full py-3 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg flex items-center justify-center gap-3 transition"
               >
-                <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+                <img
+                  src="https://www.google.com/favicon.ico"
+                  alt="Google"
+                  className="w-5 h-5"
+                />
                 {loading ? "Connecting..." : "Continue with Google"}
               </button>
               <p className="text-xs text-slate-500 text-center mt-4">
-                Secure authentication via Supabase. We do not store your Google password.
+                Secure authentication via Supabase. We do not store your Google
+                password.
               </p>
             </div>
           ) : (
@@ -161,7 +177,9 @@ export default function SignInPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Official Email</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Official Email
+                </label>
                 <input
                   type="email"
                   value={email}
@@ -173,7 +191,9 @@ export default function SignInPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Password</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Password
+                </label>
                 <input
                   type="password"
                   value={password}
@@ -195,9 +215,15 @@ export default function SignInPage() {
           )}
 
           <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-             <p className="text-sm text-slate-500">
-               New citizen? <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-semibold">Create account</Link>
-             </p>
+            <p className="text-sm text-slate-500">
+              New citizen?{" "}
+              <Link
+                href="/signup"
+                className="text-blue-600 hover:text-blue-700 font-semibold"
+              >
+                Create account
+              </Link>
+            </p>
           </div>
         </div>
       </div>

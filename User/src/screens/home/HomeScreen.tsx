@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,25 +7,25 @@ import {
   RefreshControl,
   TouchableOpacity,
   Dimensions,
-} from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Location from 'expo-location';
-import { Ionicons } from '@expo/vector-icons';
-import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
-import { IssueCard } from '../../components/issues/IssueCard';
-import { useAuth } from '../../context/AuthContext';
-import { issueService } from '../../services/issueService';
-import { colors, spacing, typography, borderRadius } from '../../theme';
-import { Issue } from '../../types';
+} from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Location from "expo-location";
+import { Ionicons } from "@expo/vector-icons";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { IssueCard } from "../../components/issues/IssueCard";
+import { useAuth } from "../../context/AuthContext";
+import { issueService } from "../../services/issueService";
+import { colors, spacing, typography, borderRadius } from "../../theme";
+import { Issue } from "../../types";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const { user, signOut, isDevMode } = useAuth();
-  
+
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,8 +34,9 @@ export function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       checkLocationServices();
+      setRefreshing(true);
       fetchIssues();
-    }, [user?.id, isDevMode])
+    }, [user?.id, isDevMode]),
   );
 
   const checkLocationServices = async () => {
@@ -49,13 +50,12 @@ export function HomeScreen() {
       const response = await issueService.listIssues(1, 10, undefined, userId);
       setIssues(response.items);
     } catch (error) {
-      console.error('Failed to fetch issues:', error);
+      console.error("Failed to fetch issues:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
-
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -68,11 +68,11 @@ export function HomeScreen() {
       setLocationEnabled(false);
       return;
     }
-    navigation.navigate('Capture');
+    navigation.navigate("Capture");
   };
 
   const handleIssuePress = (issue: Issue) => {
-    navigation.navigate('IssueDetail', { issueId: issue.id });
+    navigation.navigate("IssueDetail", { issueId: issue.id });
   };
 
   const renderHeader = () => (
@@ -80,10 +80,12 @@ export function HomeScreen() {
       <View style={styles.greeting}>
         <Text style={styles.greetingText}>Welcome back,</Text>
         <Text style={styles.userName}>
-          {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Citizen'}
+          {user?.user_metadata?.full_name ||
+            user?.email?.split("@")[0] ||
+            "Citizen"}
         </Text>
       </View>
-      
+
       <TouchableOpacity style={styles.profileButton} onPress={signOut}>
         <Ionicons name="person" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
@@ -104,11 +106,17 @@ export function HomeScreen() {
             title="Capture"
             onPress={handleReportIssue}
             size="md"
-            icon={<Ionicons name="camera" size={18} color={colors.primary.contrast} />}
+            icon={
+              <Ionicons
+                name="camera"
+                size={18}
+                color={colors.primary.contrast}
+              />
+            }
           />
         </View>
       </Card>
-      
+
       {locationEnabled === false && (
         <Card style={styles.gpsWarning}>
           <Ionicons name="location" size={24} color={colors.status.warning} />
@@ -134,13 +142,16 @@ export function HomeScreen() {
       </View>
       <View style={styles.statCard}>
         <Text style={styles.statValue}>
-          {issues.filter(i => i.state === 'resolved').length}
+          {issues.filter((i) => i.state === "resolved").length}
         </Text>
         <Text style={styles.statLabel}>Resolved</Text>
       </View>
       <View style={styles.statCard}>
         <Text style={styles.statValue}>
-          {issues.filter(i => ['assigned', 'in_progress'].includes(i.state)).length}
+          {
+            issues.filter((i) => ["assigned", "in_progress"].includes(i.state))
+              .length
+          }
         </Text>
         <Text style={styles.statLabel}>In Progress</Text>
       </View>
@@ -150,7 +161,7 @@ export function HomeScreen() {
   const renderRecentHeader = () => (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>Recent Reports</Text>
-      <TouchableOpacity onPress={() => navigation.navigate('MyIssues')}>
+      <TouchableOpacity onPress={() => navigation.navigate("MyIssues")}>
         <Text style={styles.seeAllText}>See All</Text>
       </TouchableOpacity>
     </View>
@@ -158,7 +169,11 @@ export function HomeScreen() {
 
   const renderEmpty = () => (
     <Card style={styles.emptyCard}>
-      <Ionicons name="business-outline" size={48} color={colors.text.tertiary} />
+      <Ionicons
+        name="business-outline"
+        size={48}
+        color={colors.text.tertiary}
+      />
       <Text style={styles.emptyTitle}>No Reports Yet</Text>
       <Text style={styles.emptyText}>
         Start making your city better by reporting your first issue!
@@ -209,9 +224,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xxl * 2,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.xl,
   },
   greeting: {},
@@ -228,8 +243,8 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     backgroundColor: colors.background.tertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   quickActions: {
     marginBottom: spacing.xl,
@@ -238,9 +253,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   reportCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   reportInfo: {
     flex: 1,
@@ -256,9 +271,9 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   gpsWarning: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.status.warning + '20',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.status.warning + "20",
     borderColor: colors.status.warning,
     padding: spacing.md,
     gap: spacing.sm,
@@ -270,7 +285,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   statsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: spacing.xl,
     gap: spacing.md,
   },
@@ -279,7 +294,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.glass.background,
     borderRadius: borderRadius.md,
     padding: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
     borderColor: colors.glass.border,
   },
@@ -293,9 +308,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.md,
   },
   sectionTitle: {
@@ -305,10 +320,10 @@ const styles = StyleSheet.create({
   seeAllText: {
     color: colors.primary.main,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   emptyCard: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: spacing.xl,
   },
   emptyTitle: {
@@ -320,6 +335,6 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.body,
     color: colors.text.secondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

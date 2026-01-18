@@ -34,10 +34,12 @@ class IngestionService:
         )
         
         logger.info(f"Location resolved: {location_info.city}, {location_info.locality}")
+
+        final_description = data.description or "Issue reported"
         
         issue = Issue(
             user_id=user_id,
-            description=data.description,
+            description=final_description,
             latitude=data.latitude,
             longitude=data.longitude,
             accuracy_meters=data.accuracy_meters,

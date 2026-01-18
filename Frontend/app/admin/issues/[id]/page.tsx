@@ -84,6 +84,9 @@ export default function IssueDetailPage() {
   const [selectedWorker, setSelectedWorker] = useState("");
   const [selectedPriority, setSelectedPriority] = useState(0);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  if (!API_URL) throw new Error("Missing NEXT_PUBLIC_API_URL");
+
   useEffect(() => {
     if (id) {
       fetchIssueDetails();
@@ -122,16 +125,11 @@ export default function IssueDetailPage() {
       const headers: any = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/admin/issues/${id}`,
-        {
-          method: "PATCH",
-          headers,
-          body: JSON.stringify(updateData),
-        },
-      );
+      const res = await fetch(`${API_URL}/admin/issues/${id}`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify(updateData),
+      });
 
       if (!res.ok) throw new Error("Failed to update");
 
@@ -173,9 +171,7 @@ export default function IssueDetailPage() {
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
       const res = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/admin/issues/${id}/approve_resolution`,
+        `${API_URL}/admin/issues/${id}/approve_resolution`,
         {
           method: "POST",
           headers,

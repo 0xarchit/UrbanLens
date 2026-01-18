@@ -4,7 +4,8 @@ import { useRouter, useParams } from "next/navigation";
 import { apiGet } from "@/lib/api";
 import { ArrowLeft, Camera, Navigation, Loader2 } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) throw new Error("Missing NEXT_PUBLIC_API_URL");
 
 interface Task {
   id: string;
