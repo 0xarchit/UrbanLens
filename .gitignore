@@ -96,3 +96,5 @@ archive.zip
 
 *.sql
 !model.pt
+.agent
+design-system
