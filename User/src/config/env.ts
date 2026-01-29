@@ -6,7 +6,7 @@ export const config = {
   API_BASE_URL:
     extra.API_BASE_URL ||
     process.env.EXPO_PUBLIC_API_BASE_URL ||
-    "https://0xarchit-city-issue.hf.space",
+    "https://0xarchit-urbanlens.hf.space",
   SUPABASE_URL: extra.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL,
   SUPABASE_ANON_KEY:
     extra.SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,

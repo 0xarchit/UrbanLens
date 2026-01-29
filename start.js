@@ -14,7 +14,7 @@ console.log("========================================================\n");
 
 console.log("[INFO] System URLs after startup:");
 console.log("       Frontend: https://cityissue.0xarchit.is-a.dev");
-console.log("       Backend:  https://0xarchit-city-issue.hf.space\n");
+console.log("       Backend:  https://0xarchit-urbanlens.hf.space\n");
 console.log("[INFO] Press Ctrl+C ONCE to stop all services and cleanup.\n");
 
 // Paths
