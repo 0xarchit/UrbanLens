@@ -26,4 +26,4 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 7860
 
-CMD ["python", "-m", "uvicorn", "Backend.api:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["python", "-m", "uvicorn", "Backend.api:app", "--host", "0.0.0.0", "--port", "7860", "--forwarded-allow-ips", "*"]

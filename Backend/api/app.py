@@ -75,6 +75,7 @@ def create_app() -> FastAPI:
         description="Autonomous urban issue detection and resolution platform",
         version="1.0.0",
         lifespan=lifespan,
+        root_path="",
     )
     
     # CORS must be added first
