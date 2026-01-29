@@ -77,17 +77,19 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     
-    app.add_middleware(SecurityHeadersMiddleware)
-    app.add_middleware(RateLimitMiddleware, requests_per_minute=120, burst_limit=20)
-    app.add_middleware(RequestValidationMiddleware)
-    
+    # CORS must be added first
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["*"],
     )
+    
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RateLimitMiddleware, requests_per_minute=120, burst_limit=20)
+    app.add_middleware(RequestValidationMiddleware)
 
     
     settings.local_temp_dir.mkdir(parents=True, exist_ok=True)
