@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Issue } from '../types';
 
 const CACHE_KEY = 'ISSUES_CACHE';
-const CACHE_EXPIRY_MS = 5 * 60 * 1000;
+const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 
 interface CacheData {
   issues: Issue[];
@@ -10,7 +10,11 @@ interface CacheData {
 }
 
 export const cacheService = {
-  async getIssuesCache(): Promise<Issue[] | null> {
+  /**
+   * Retrieves issues from cache.
+   * @param ignoreExpiry If true, returns cached data even if expired (useful for initial render while fetching)
+   */
+  async getIssuesCache(ignoreExpiry = false): Promise<Issue[] | null> {
     try {
       const cached = await AsyncStorage.getItem(CACHE_KEY);
       if (!cached) return null;
@@ -18,8 +22,8 @@ export const cacheService = {
       const data: CacheData = JSON.parse(cached);
       const isExpired = Date.now() - data.timestamp > CACHE_EXPIRY_MS;
       
-      if (isExpired) {
-        await this.clearCache();
+      if (isExpired && !ignoreExpiry) {
+        // We don't clear here if we want to allow stale retrieval later
         return null;
       }
       
@@ -37,6 +41,7 @@ export const cacheService = {
       };
       await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(data));
     } catch {
+      // Ignore write errors
     }
   },
 
@@ -44,6 +49,7 @@ export const cacheService = {
     try {
       await AsyncStorage.removeItem(CACHE_KEY);
     } catch {
+      // Ignore errors
     }
   },
 };

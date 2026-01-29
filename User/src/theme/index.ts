@@ -1,39 +1,40 @@
 export const colors = {
   primary: {
-    main: '#6366F1',
-    light: '#818CF8',
-    dark: '#4F46E5',
+    main: '#3B82F6', // UrbanLens Primary
+    light: '#60A5FA', // UrbanLens Secondary
+    dark: '#2563EB',
     contrast: '#FFFFFF',
   },
   secondary: {
-    main: '#10B981',
-    light: '#34D399',
-    dark: '#059669',
+    main: '#60A5FA', // UrbanLens Secondary
+    light: '#93C5FD',
+    dark: '#3B82F6',
     contrast: '#FFFFFF',
   },
   accent: {
-    orange: '#F59E0B',
+    cta: '#F97316', // UrbanLens CTA
+    orange: '#F97316',
     pink: '#EC4899',
     cyan: '#06B6D4',
     purple: '#8B5CF6',
   },
   background: {
-    primary: '#0F172A',
-    secondary: '#1E293B',
-    tertiary: '#334155',
-    card: '#1E293B',
-    gradient: ['#0F172A', '#1E293B'] as const,
+    primary: '#F1F5F9', // Slate 100
+    secondary: '#E2E8F0', // Slate 200 (Darker for contrast)
+    tertiary: '#CBD5E1', // Slate 300
+    card: '#FFFFFF',
+    gradient: ['#F8FAFC', '#E2E8F0'] as const,
   },
   text: {
-    primary: '#F8FAFC',
-    secondary: '#94A3B8',
-    tertiary: '#64748B',
-    inverse: '#0F172A',
+    primary: '#1E293B', // UrbanLens Text
+    secondary: '#475569',
+    tertiary: '#94A3B8',
+    inverse: '#FFFFFF',
   },
   border: {
-    light: '#334155',
-    medium: '#475569',
-    accent: 'rgba(99, 102, 241, 0.3)',
+    light: '#E2E8F0',
+    medium: '#CBD5E1',
+    accent: 'rgba(59, 130, 246, 0.3)',
   },
   status: {
     success: '#10B981',
@@ -48,8 +49,8 @@ export const colors = {
     low: '#10B981',
   },
   glass: {
-    background: 'rgba(30, 41, 59, 0.8)',
-    border: 'rgba(148, 163, 184, 0.1)',
+    background: 'rgba(255, 255, 255, 0.7)',
+    border: 'rgba(255, 255, 255, 0.5)',
   },
 };
 

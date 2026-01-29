@@ -7,11 +7,12 @@ import React, {
 } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { CONFIG_ERROR, supabase } from "../config/supabase";
-import * as Google from "expo-auth-session/providers/google";
-import * as WebBrowser from "expo-web-browser";
-import { makeRedirectUri } from "expo-auth-session";
-
-WebBrowser.maybeCompleteAuthSession();
+import {
+  GoogleSignin,
+  statusCodes,
+  isErrorWithCode,
+} from "../lib/googleAuthSafe";
+import { Alert } from "react-native";
 
 interface AuthContextType {
   user: User | null;
@@ -43,6 +44,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
+    // Configure Google Sign-In
+    try {
+      GoogleSignin.configure({
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID, // From .env
+        scopes: ["email", "profile"],
+        offlineAccess: true,
+      });
+    } catch (e: any) {
+      if (e.message?.includes("RNGoogleSignin")) {
+         console.warn("Google Sign-In not supported in Expo Go. Use a development build or 'Dev Mode'.");
+      } else {
+         console.error("Google Sign-In config error:", e);
+      }
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -64,68 +80,68 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signInWithGoogle = async () => {
     try {
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      const redirectUri = makeRedirectUri({
-        scheme: "cityissue",
-        path: "auth/callback",
-      });
-
-      console.log("OAuth redirect URI:", redirectUri);
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectUri,
-          skipBrowserRedirect: true,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectUri,
-        );
-
-        console.log("OAuth result:", result.type);
-
-        if (result.type === "success" && result.url) {
-          const url = new URL(result.url);
-
-          let accessToken = url.searchParams.get("access_token");
-          let refreshToken = url.searchParams.get("refresh_token");
-
-          if (!accessToken && url.hash) {
-            const hashParams = new URLSearchParams(url.hash.substring(1));
-            accessToken = hashParams.get("access_token");
-            refreshToken = hashParams.get("refresh_token");
-          }
-
-          console.log("Got tokens:", !!accessToken, !!refreshToken);
-
-          if (accessToken && refreshToken) {
-            const { data: sessionData, error: sessionError } =
-              await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              });
-
-            if (sessionError) throw sessionError;
-
-            setSession(sessionData.session);
-            setUser(sessionData.session?.user ?? null);
-          }
+        if (!supabase) {
+            Alert.alert("Configuration Error", "Supabase is not configured.");
+            return;
         }
-      }
-    } catch (error) {
-      console.error("Google sign in error:", error);
+
+        setLoading(true);
+
+        // 1. Check Play Services (Android)
+        try {
+          await GoogleSignin.hasPlayServices();
+        } catch (e: any) {
+             if (e.message?.includes("RNGoogleSignin")) {
+                Alert.alert("Expo Go Detected", "Native Google Sign-In is not supported in Expo Go. Please use 'Dev Mode' or build a development client.");
+                setLoading(false);
+                return;
+             }
+             throw e;
+        }
+
+        // 2. Native Sign In
+        const userInfo = await GoogleSignin.signIn();
+        
+        // 3. Get ID Token
+        if (userInfo.data?.idToken) {
+            const { data, error } = await supabase.auth.signInWithIdToken({
+                provider: "google",
+                token: userInfo.data.idToken,
+            });
+
+            if (error) throw error;
+            
+            // Critical: Update state immediately to trigger UI refresh
+            if (data.session) {
+                setSession(data.session);
+                setUser(data.session.user);
+            }
+        } else {
+            throw new Error("No ID token returned from Google Sign-In");
+        }
+
+    } catch (error: any) {
+        if (isErrorWithCode(error)) {
+            switch (error.code) {
+                case statusCodes.SIGN_IN_CANCELLED:
+                    console.log("User cancelled the login flow");
+                    break;
+                case statusCodes.IN_PROGRESS:
+                    console.log("Sign in is in progress");
+                    break;
+                case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+                    Alert.alert("Error", "Google Play Services not available or outdated.");
+                    break;
+                default:
+                    console.error("Google Sign-In Error:", error);
+                    Alert.alert("Google Sign-In Error", error.message);
+            }
+        } else {
+            console.error("An error occurred:", error);
+            Alert.alert("Sign-In Failed", error.message || "Unknown error");
+        }
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -146,6 +162,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     try {
       setLoading(true);
+      
+      // Sign out from Google Native SDK first
+      try {
+        await GoogleSignin.signOut();
+      } catch (e) {
+        console.warn("Google Sign-Out error (ignoring):", e);
+      }
+
       if (!isDevMode && supabase) {
         await supabase.auth.signOut();
       }

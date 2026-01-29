@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { apiGet } from "@/lib/api";
+import { useCachedFetch } from "@/hooks/useCachedFetch";
 import { Smartphone, FileText, MapPin } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -24,35 +25,30 @@ interface Issue {
   images?: { file_path: string; annotated_path: string }[];
 }
 
+interface IssuesResponse {
+  items: Issue[];
+}
+
 export default function UserDashboard() {
   const { user, role, signOut, loading: authLoading } = useAuth();
-  const [issues, setIssues] = useState<Issue[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     if (!authLoading) {
       if (role !== "user") {
         router.push("/signin");
-        return;
       }
-      if (user) fetchIssues(user.id);
     }
-  }, [authLoading, role, router, user]);
+  }, [authLoading, role, router]);
 
-  const fetchIssues = async (userId: string) => {
-    try {
-      const token = localStorage.getItem("supabase_token");
-      const res = await fetch(`${API_URL}/issues?user_id=${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setIssues(data.items || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch issues:", error);
-    }
-  };
+  // Only fetch if user ID is available
+  const fetchUrl = user?.id ? `/issues?user_id=${user.id}` : "";
+  const { data: issuesResponse, loading: issuesLoading } = useCachedFetch<IssuesResponse>(fetchUrl);
+
+  const issues = issuesResponse?.items || [];
+  
+  // Create a combined loading state, but prioritize showing dashboard shell if auth is done
+  const contentLoading = authLoading || (issuesLoading && issues.length === 0);
 
   const getStateBadge = (state: string) => {
     const styles: Record<string, string> = {

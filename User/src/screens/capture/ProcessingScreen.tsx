@@ -8,6 +8,7 @@ import {
   Dimensions,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -97,12 +98,28 @@ export function ProcessingScreen() {
   const [isComplete, setIsComplete] = useState(false);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const scanLineAnim = useRef(new Animated.Value(0)).current;
   const pulseAnims = useRef(
     initialAgents.map(() => new Animated.Value(1)),
   ).current;
 
   useEffect(() => {
     submitIssue();
+    
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scanLineAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scanLineAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        })
+      ])
+    ).start();
   }, []);
 
   useEffect(() => {
@@ -280,30 +297,36 @@ export function ProcessingScreen() {
     outputRange: ["0%", "100%"],
   });
 
+  const scanTranslateY = scanLineAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 180], // Match image height
+  });
+
+
   return (
     <LinearGradient
       colors={[colors.background.primary, colors.background.secondary]}
       style={styles.container}
     >
       <View style={styles.header}>
-        <View style={styles.headerIcon}>
+        <View style={[styles.headerIcon, isComplete && styles.headerIconComplete]}>
           {isComplete ? (
             <Ionicons name="sparkles" size={32} color={colors.secondary.main} />
           ) : (
             <MaterialCommunityIcons
-              name="robot"
+              name="robot-outline"
               size={32}
               color={colors.primary.main}
             />
           )}
         </View>
         <Text style={styles.title}>
-          {isComplete ? "Issue Submitted!" : "AI Processing..."}
+          {isComplete ? "Report Processed!" : "AI Analysis in Progress"}
         </Text>
         <Text style={styles.subtitle}>
           {isComplete
-            ? "Your report has been routed to the right team"
-            : "Our agents are analyzing your report"}
+            ? "Your issue has been categorized and routed."
+            : "Our intelligent agents are analyzing your report."}
         </Text>
       </View>
 
@@ -311,7 +334,13 @@ export function ProcessingScreen() {
         <Image source={{ uri: imageUri }} style={styles.image} />
         {!isComplete && (
           <View style={styles.imageOverlay}>
-            <View style={styles.scanLine} />
+            <Animated.View 
+              style={[
+                styles.scanLine, 
+                { transform: [{ translateY: scanTranslateY }] }
+              ]} 
+            />
+            <View style={styles.gridOverlay} />
           </View>
         )}
       </View>
@@ -322,6 +351,9 @@ export function ProcessingScreen() {
             style={[styles.progressFill, { width: progressInterpolate }]}
           />
         </View>
+        <Text style={styles.progressText}>
+          {Math.round((agents.filter(a => a.status === 'done').length / agents.length) * 100)}% Complete
+        </Text>
       </View>
 
       <ScrollView
@@ -336,16 +368,11 @@ export function ProcessingScreen() {
               styles.agentRow,
               {
                 transform: [{ scale: pulseAnims[index] }],
-                opacity: agent.status === "pending" ? 0.6 : 1,
-                backgroundColor:
-                  agent.status === "running"
-                    ? "rgba(33, 150, 243, 0.1)"
-                    : "rgba(255,255,255,0.05)",
+                opacity: agent.status === "pending" ? 0.5 : 1,
                 borderColor:
                   agent.status === "running"
                     ? colors.primary.main
-                    : "transparent",
-                borderWidth: 1,
+                    : "rgba(255,255,255,0.1)",
               },
             ]}
           >
@@ -356,86 +383,71 @@ export function ProcessingScreen() {
                 agent.status === "running" && styles.agentIconRunning,
               ]}
             >
-              {agent.status === "done" ? (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={24}
-                  color={colors.secondary.main}
-                />
-              ) : (
-                <Ionicons
-                  name={agent.iconName}
-                  size={24}
-                  color={
-                    agent.status === "running"
-                      ? colors.primary.main
-                      : colors.text.secondary
-                  }
-                />
-              )}
+              <Ionicons
+                name={agent.status === "done" ? "checkmark" : agent.iconName}
+                size={20}
+                color={
+                  agent.status === "done"
+                    ? colors.secondary.main
+                    : agent.status === "running"
+                    ? colors.primary.main
+                    : colors.text.tertiary
+                }
+              />
             </View>
 
             <View style={styles.agentInfo}>
               <Text
                 style={[
                   styles.agentLabel,
-                  agent.status === "running" && {
-                    color: colors.primary.main,
-                    fontWeight: "700",
-                  },
+                  agent.status === "running" && styles.agentLabelRunning,
                 ]}
               >
                 {agent.label}
               </Text>
 
               {agent.decision ? (
-                <Text style={styles.agentDecision}>{agent.decision}</Text>
-              ) : null}
-
-              {agent.reasoning ? (
-                <Text style={styles.agentReasoning} numberOfLines={2}>
-                  {agent.reasoning}
-                </Text>
+                <Text style={styles.agentDecision}>Result: {agent.decision}</Text>
               ) : null}
             </View>
 
             {agent.status === "running" && (
-              <View style={styles.spinner}>
-                <Ionicons name="sync" size={16} color={colors.primary.main} />
-              </View>
+              <ActivityIndicator size="small" color={colors.primary.main} />
             )}
           </Animated.View>
         ))}
       </ScrollView>
 
-      {error && (
-        <Card style={styles.errorCard}>
+      {error ? (
+        <Card style={styles.errorCard} variant="glass">
           <View style={styles.errorContent}>
             <Ionicons
-              name="close-circle"
-              size={20}
+              name="alert-circle"
+              size={24}
               color={colors.status.error}
             />
             <Text style={styles.errorText}>{error}</Text>
           </View>
           <Button
-            title="Try Again"
+            title="Retry Upload"
             variant="outline"
             onPress={submitIssue}
             size="sm"
+            style={{ borderColor: colors.status.error }}
+            textStyle={{ color: colors.status.error }}
           />
         </Card>
-      )}
+      ) : null}
 
       {isComplete && (
         <View style={styles.actions}>
-          <Button title="View Details" onPress={handleViewDetails} fullWidth />
+          <Button title="View Receipt" onPress={handleViewDetails} fullWidth size="lg" />
           <Button
-            title="Report Another"
-            variant="outline"
+            title="Return Home"
+            variant="ghost"
             onPress={handleGoHome}
             fullWidth
-            style={{ marginTop: spacing.md }}
+            style={{ marginTop: spacing.sm }}
           />
         </View>
       )}
@@ -446,40 +458,53 @@ export function ProcessingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: spacing.xl,
+    padding: spacing.lg,
     paddingTop: 60,
   },
   header: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
     alignItems: "center",
   },
   headerIcon: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(59, 130, 246, 0.1)", // Blue tint
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.2)",
+  },
+  headerIconComplete: {
+    backgroundColor: "rgba(16, 185, 129, 0.1)", // Green tint
+    borderColor: "rgba(16, 185, 129, 0.2)",
   },
   title: {
-    ...typography.h2,
+    fontSize: 24,
+    fontWeight: "700",
     color: colors.text.primary,
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   subtitle: {
-    ...typography.body,
+    fontSize: 14,
     color: colors.text.secondary,
     textAlign: "center",
+    maxWidth: '80%',
   },
   imageContainer: {
-    height: 180,
-    borderRadius: borderRadius.lg,
+    height: 200,
+    borderRadius: 20,
     overflow: "hidden",
     backgroundColor: colors.background.card,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: colors.border.light,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
   image: {
     width: "100%",
@@ -488,31 +513,47 @@ const styles = StyleSheet.create({
   },
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
+    backgroundColor: "transparent",
+    overflow: 'hidden',
+  },
+  gridOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "transparent", 
+    // Add grid background image or implementation if feasible, otherwise keep transparent
   },
   scanLine: {
     height: 2,
-    backgroundColor: colors.primary.main,
+    backgroundColor: colors.secondary.main, // Green laser
     width: "100%",
-    shadowColor: colors.primary.main,
-    shadowOpacity: 0.8,
+    shadowColor: colors.secondary.main,
+    shadowOpacity: 1,
     shadowRadius: 10,
     elevation: 5,
   },
   progressContainer: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   progressTrack: {
-    height: 6,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 3,
+    flex: 1,
+    height: 8,
+    backgroundColor: "rgba(0,0,0,0.05)",
+    borderRadius: 4,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
     backgroundColor: colors.primary.main,
-    borderRadius: 3,
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    fontWeight: "600",
+    width: 90,
+    textAlign: 'right',
   },
   agentsContainer: {
     flex: 1,
@@ -520,51 +561,55 @@ const styles = StyleSheet.create({
   agentRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.sm,
+    padding: 12,
+    borderRadius: 16,
+    marginBottom: 8,
+    backgroundColor: "rgba(255,255,255,0.6)",
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   agentIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: colors.background.tertiary,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: spacing.md,
+    marginRight: 12,
   },
   agentIconDone: {
-    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
   },
   agentIconRunning: {
-    backgroundColor: "rgba(33, 150, 243, 0.1)",
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
   },
   agentInfo: {
     flex: 1,
   },
   agentLabel: {
-    ...typography.bodySmall,
+    fontSize: 15,
     fontWeight: "600",
     color: colors.text.primary,
-    marginBottom: 2,
+  },
+  agentLabelRunning: {
+    color: colors.primary.main,
   },
   agentDecision: {
-    ...typography.caption,
+    fontSize: 12,
     color: colors.secondary.main,
-    fontWeight: "600",
+    marginTop: 2,
+    fontWeight: "500",
   },
   agentReasoning: {
-    ...typography.caption,
+    fontSize: 12,
     color: colors.text.tertiary,
     marginTop: 2,
   },
-  spinner: {
-    marginLeft: spacing.sm,
-  },
   errorCard: {
     marginTop: spacing.md,
-    backgroundColor: "rgba(244, 67, 54, 0.1)",
-    borderColor: "rgba(244, 67, 54, 0.3)",
+    backgroundColor: "rgba(254, 226, 226, 0.5)", // Red tint
+    borderColor: "rgba(248, 113, 113, 0.3)",
+    padding: spacing.md,
   },
   errorContent: {
     flexDirection: "row",
@@ -572,13 +617,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   errorText: {
-    ...typography.body,
+    fontSize: 14,
     color: colors.status.error,
     marginLeft: spacing.sm,
     flex: 1,
+    fontWeight: "500",
   },
   actions: {
-    marginTop: spacing.md,
-    marginBottom: spacing.xl,
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
   },
 });

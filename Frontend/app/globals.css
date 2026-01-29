@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
 @theme {
+  --color-urban-primary: #3B82F6;
+  --color-urban-secondary: #60A5FA;
+  --color-urban-cta: #F97316;
+  --color-urban-bg: #F8FAFC;
+  --color-urban-text: #1E293B;
+
   --color-slate-50: #f8fafc;
   --color-slate-100: #f1f5f9;
   --color-slate-200: #e2e8f0;
@@ -12,28 +18,32 @@
   --color-slate-800: #1e293b;
   --color-slate-900: #0f172a;
   --color-slate-950: #020617;
-
-  --color-blue-50: #eff6ff;
-  --color-blue-100: #dbeafe;
-  --color-blue-200: #bfdbfe;
-  --color-blue-300: #93c5fd;
-  --color-blue-400: #60a5fa;
-  --color-blue-500: #3b82f6;
-  --color-blue-600: #2563eb;
-  --color-blue-700: #1d4ed8;
-  --color-blue-800: #1e40af;
-  --color-blue-900: #1e3a8a;
-  --color-blue-950: #172554;
+  
+  --font-fira-code: 'Fira Code', monospace;
+  --font-fira-sans: 'Fira Sans', sans-serif;
+  
+  --shadow-urban-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-urban-md: 0 4px 6px rgba(0,0,0,0.1);
+  --shadow-urban-lg: 0 10px 15px rgba(0,0,0,0.1);
+  --shadow-urban-xl: 0 20px 25px rgba(0,0,0,0.15);
 }
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: var(--color-urban-bg);
+  --foreground: var(--color-urban-text);
+  --primary: var(--color-urban-primary);
+  --secondary: var(--color-urban-secondary);
+  --cta: var(--color-urban-cta);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-fira-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-fira-code);
 }
 
 input,
@@ -42,11 +52,15 @@ textarea {
   border-width: 1px;
   border-color: var(--color-slate-300);
   outline: none;
+  font-family: var(--font-fira-sans);
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: border-color 0.2s;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--color-slate-800);
-  box-shadow: 0 0 0 1px var(--color-slate-800);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); /* urban-primary 10% */
 }

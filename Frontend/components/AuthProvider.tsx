@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const redirectToDashboard = (role: string) => {
-    if (["/signin", "/signup", "/"].includes(window.location.pathname)) {
+    if (["/signin", "/signup"].includes(window.location.pathname)) {
       if (role === "admin") router.push("/admin");
       else if (role === "worker") router.push("/worker");
       else router.push("/user");

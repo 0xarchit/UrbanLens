@@ -148,6 +148,7 @@ class IssueResponse(BaseModel):
     city: Optional[str] = None
     locality: Optional[str] = None
     full_address: Optional[str] = None
+    geo_status: Optional[str] = None
     department: Optional[str] = None
     assigned_member: Optional[str] = None
     sla_hours: Optional[int] = None

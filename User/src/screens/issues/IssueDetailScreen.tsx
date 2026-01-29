@@ -174,7 +174,7 @@ export function IssueDetailScreen() {
           ) : null}
           
           {issue.confidence !== undefined && issue.confidence !== null ? (
-            <Card style={styles.confidenceCard}>
+            <Card style={styles.confidenceCard} variant="glass">
               <View style={styles.confidenceRow}>
                 <Text style={styles.confidenceLabel}>AI Confidence</Text>
                 <Text style={styles.confidenceValue}>
@@ -193,13 +193,13 @@ export function IssueDetailScreen() {
           ) : null}
           
           {issue.description ? (
-            <Card style={styles.descriptionCard}>
+            <Card style={styles.descriptionCard} variant="glass">
               <Text style={styles.sectionTitle}>Description</Text>
               <Text style={styles.description}>{issue.description}</Text>
             </Card>
           ) : null}
           
-          <Card style={styles.detailsCard}>
+          <Card style={styles.detailsCard} variant="glass">
             <Text style={styles.sectionTitle}>Details</Text>
             
             <View style={styles.detailRow}>
@@ -310,7 +310,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(255,255,255,0.2)', // Light glass
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -319,9 +321,11 @@ const styles = StyleSheet.create({
     bottom: spacing.lg,
     right: spacing.lg,
     flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     borderRadius: borderRadius.full,
     padding: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   toggleButton: {
     paddingHorizontal: spacing.md,
@@ -334,7 +338,7 @@ const styles = StyleSheet.create({
   toggleText: {
     color: colors.text.primary,
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   content: {
     padding: spacing.lg,
@@ -354,21 +358,25 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   stateBadge: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderWidth: 1,
   },
   badgeText: {
     color: colors.text.primary,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   category: {
-    ...typography.h2,
+    fontSize: 28,
+    fontWeight: '800',
     color: colors.text.primary,
     marginBottom: spacing.lg,
+    letterSpacing: -0.5,
   },
   confidenceCard: {
     marginBottom: spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   confidenceRow: {
     flexDirection: 'row',
@@ -377,34 +385,38 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   confidenceLabel: {
-    ...typography.body,
+    fontSize: 14,
     color: colors.text.secondary,
+    fontWeight: '500',
   },
   confidenceValue: {
-    ...typography.h3,
+    fontSize: 24,
+    fontWeight: '700',
     color: colors.secondary.main,
+    fontFamily: 'monospace', // Assuming Fira Code availability or fallback
   },
   confidenceBar: {
-    height: 8,
-    backgroundColor: colors.background.tertiary,
-    borderRadius: 4,
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
     overflow: 'hidden',
   },
   confidenceFill: {
     height: '100%',
     backgroundColor: colors.secondary.main,
-    borderRadius: 4,
+    borderRadius: 3,
   },
   descriptionCard: {
     marginBottom: spacing.md,
   },
   sectionTitle: {
-    ...typography.h3,
+    fontSize: 18,
+    fontWeight: '700',
     color: colors.text.primary,
     marginBottom: spacing.md,
   },
   description: {
-    ...typography.body,
+    fontSize: 15,
     color: colors.text.secondary,
     lineHeight: 24,
   },
@@ -414,10 +426,10 @@ const styles = StyleSheet.create({
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   detailLabelContainer: {
     flexDirection: 'row',
@@ -425,15 +437,17 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   detailLabel: {
-    ...typography.body,
+    fontSize: 14,
     color: colors.text.secondary,
+    fontWeight: '500',
   },
   detailValue: {
-    ...typography.body,
+    fontSize: 15,
     color: colors.text.primary,
     flex: 1,
     textAlign: 'right',
     marginLeft: spacing.md,
+    fontWeight: '600',
   },
   timeline: {
     marginBottom: spacing.xl,
@@ -447,18 +461,21 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     marginRight: spacing.md,
+    shadowColor: colors.primary.main, // Glow effect placeholder
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
   },
   timelineContent: {
     flex: 1,
   },
   timelineTitle: {
-    ...typography.body,
+    fontSize: 16,
     color: colors.text.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   timelineDate: {
-    ...typography.caption,
-    color: colors.text.secondary,
+    fontSize: 13,
+    color: colors.text.tertiary,
     marginTop: 2,
   },
 });

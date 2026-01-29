@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Dimensions, StatusBar } from "react-native";
+import { View, Text, StyleSheet, Dimensions, StatusBar, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "../../components/ui/Button";
@@ -15,93 +15,58 @@ export function LoginScreen() {
   return (
     <LinearGradient
       colors={[
-        colors.background.primary,
-        "#1a1a2e",
-        colors.background.secondary,
+        colors.background.primary, // #F8FAFC
+        "#F1F5F9", // Slate-100
+        colors.background.secondary, // #E2E8F0
       ]}
       style={styles.container}
     >
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
 
-      <View style={styles.decorCircle1} />
-      <View style={styles.decorCircle2} />
-      <View style={styles.decorCircle3} />
+      {/* Decorative Blur Circles */}
+      <View style={[styles.decorCircle, { top: -100, right: -100, backgroundColor: colors.primary.main + "08", width: 400, height: 400, borderRadius: 200 }]} />
+      <View style={[styles.decorCircle, { bottom: 0, left: -50, backgroundColor: colors.secondary.main + "08", width: 300, height: 300, borderRadius: 150 }]} />
 
       <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <LinearGradient
-            colors={[colors.primary.light, colors.primary.dark]}
-            style={styles.logoGradient}
-          >
-            <Ionicons name="business" size={48} color={colors.text.primary} />
-          </LinearGradient>
+        <View style={styles.headerSection}>
+          <View style={styles.logoContainer}>
+             <LinearGradient
+              colors={[colors.primary.main, colors.primary.dark]}
+              style={styles.logoBadge}
+            >
+              <Text style={styles.logoText}>U</Text>
+            </LinearGradient>
+            <View>
+              <Text style={styles.brandTitle}>Urban<Text style={{color: colors.primary.main}}>Lens</Text></Text>
+              <Text style={styles.brandSubtitle}>City Issue Reporter</Text>
+            </View>
+          </View>
+
+          <Text style={styles.heroText}>
+            Building a Better City,{"\n"}
+            <Text style={{color: colors.primary.main}}>Together.</Text>
+          </Text>
         </View>
 
-        <Text style={styles.title}>City Issue Reporter</Text>
-        <Text style={styles.subtitle}>
-          Be the eyes of your city. Report issues instantly and track their
-          resolution in real-time.
-        </Text>
-
         <View style={styles.features}>
-          <View style={styles.feature}>
-            <View
-              style={[
-                styles.featureIcon,
-                { backgroundColor: colors.accent.cyan + "20" },
-              ]}
-            >
-              <Ionicons name="camera" size={24} color={colors.accent.cyan} />
-            </View>
-            <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Snap & Report</Text>
-              <Text style={styles.featureDesc}>
-                Take a photo and AI handles the rest
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.feature}>
-            <View
-              style={[
-                styles.featureIcon,
-                { backgroundColor: colors.secondary.main + "20" },
-              ]}
-            >
-              <Ionicons
-                name="sparkles"
-                size={24}
-                color={colors.secondary.main}
-              />
-            </View>
-            <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>AI-Powered</Text>
-              <Text style={styles.featureDesc}>
-                Automatic classification & routing
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.feature}>
-            <View
-              style={[
-                styles.featureIcon,
-                { backgroundColor: colors.accent.purple + "20" },
-              ]}
-            >
-              <Ionicons
-                name="location"
-                size={24}
-                color={colors.accent.purple}
-              />
-            </View>
-            <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Real-Time Tracking</Text>
-              <Text style={styles.featureDesc}>
-                Watch your issue get resolved live
-              </Text>
-            </View>
-          </View>
+          <FeatureItem 
+            icon="camera" 
+            color={colors.primary.main} 
+            title="Snap & Report" 
+            desc="Take a photo, AI handles the details" 
+          />
+          <FeatureItem 
+            icon="flash" 
+            color="#F59E0B" 
+            title="Instant Routing" 
+            desc="Auto-assigned to the right team" 
+          />
+          <FeatureItem 
+            icon="shield-checkmark" 
+            color="#10B981" 
+            title="Verified Resolution" 
+            desc="Track progress in real-time" 
+          />
         </View>
       </View>
 
@@ -113,112 +78,117 @@ export function LoginScreen() {
           disabled={!!configError}
           fullWidth
           size="lg"
+          variant="primary"
+          style={styles.googleButton}
           icon={
             <Ionicons
               name="logo-google"
               size={20}
-              color={colors.primary.contrast}
+              color="#FFF"
             />
           }
         />
 
         <Button
           title="Continue with Dev Mode"
-          variant="outline"
+          variant="ghost"
           onPress={continueWithDevMode}
           fullWidth
-          size="md"
+          size="sm"
           style={{ marginTop: spacing.md }}
+          textStyle={{ color: colors.text.tertiary }}
         />
 
-        <Text style={styles.devNote}>
-          {configError
-            ? configError
-            : "Production Beta - Dev Mode available for testing"}
+        <Text style={styles.versionText}>
+          v1.2.0 • UrbanLens Public Beta
         </Text>
       </View>
     </LinearGradient>
   );
 }
 
+const FeatureItem = ({ icon, color, title, desc }: any) => (
+  <View style={styles.feature}>
+    <View style={[styles.featureIcon, { backgroundColor: color + "15" }]}>
+      <Ionicons name={icon as any} size={24} color={color} />
+    </View>
+    <View style={styles.featureText}>
+      <Text style={styles.featureTitle}>{title}</Text>
+      <Text style={styles.featureDesc}>{desc}</Text>
+    </View>
+  </View>
+);
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  decorCircle1: {
+  decorCircle: {
     position: "absolute",
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: colors.primary.main + "10",
-    top: -100,
-    right: -100,
-  },
-  decorCircle2: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: colors.secondary.main + "10",
-    bottom: 200,
-    left: -80,
-  },
-  decorCircle3: {
-    position: "absolute",
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: colors.accent.purple + "10",
-    top: 300,
-    right: -50,
   },
   content: {
     flex: 1,
-    justifyContent: "center",
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
+    paddingTop: 80, // Increased top padding
+  },
+  headerSection: {
+    marginBottom: spacing.xxl,
   },
   logoContainer: {
+    flexDirection: "row",
     alignItems: "center",
     marginBottom: spacing.xl,
+    gap: spacing.md,
   },
-  logoGradient: {
-    width: 100,
-    height: 100,
-    borderRadius: 30,
+  logoBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: colors.primary.main,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  title: {
-    ...typography.h1,
+  logoText: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#FFF",
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  brandTitle: {
+    fontSize: 24,
+    fontWeight: "800",
     color: colors.text.primary,
-    textAlign: "center",
-    marginBottom: spacing.md,
+    lineHeight: 28,
+    letterSpacing: -0.5,
   },
-  subtitle: {
-    ...typography.body,
+  brandSubtitle: {
+    fontSize: 13,
     color: colors.text.secondary,
-    textAlign: "center",
-    marginBottom: spacing.xl,
-    lineHeight: 24,
+    fontWeight: "500",
+  },
+  heroText: {
+    fontSize: 34,
+    fontWeight: "800",
+    color: colors.text.primary,
+    lineHeight: 40,
+    letterSpacing: -1,
   },
   features: {
-    marginTop: spacing.lg,
+    gap: spacing.lg,
   },
   feature: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   featureIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -227,23 +197,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   featureTitle: {
-    ...typography.body,
+    fontSize: 16,
+    fontWeight: "700",
     color: colors.text.primary,
-    fontWeight: "600",
+    marginBottom: 2,
   },
   featureDesc: {
-    ...typography.caption,
+    fontSize: 13,
     color: colors.text.secondary,
-    marginTop: 2,
+    lineHeight: 18,
   },
   footer: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xxl,
+    paddingTop: spacing.xl,
   },
-  devNote: {
-    ...typography.caption,
+  googleButton: {
+    shadowColor: colors.primary.main,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  versionText: {
+    fontSize: 11,
     color: colors.text.tertiary,
     textAlign: "center",
-    marginTop: spacing.lg,
+    marginTop: spacing.xl,
   },
 });

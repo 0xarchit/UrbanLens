@@ -13,6 +13,7 @@ interface ButtonProps {
   icon?: React.ReactNode;
   fullWidth?: boolean;
   style?: ViewStyle;
+  textStyle?: TextStyle;
 }
 
 export function Button({
@@ -25,6 +26,7 @@ export function Button({
   icon,
   fullWidth = false,
   style,
+  textStyle,
 }: ButtonProps) {
   const sizeStyles = {
     sm: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
@@ -54,6 +56,7 @@ export function Button({
               variant === 'outline' && styles.outlineText,
               variant === 'ghost' && styles.ghostText,
               icon ? styles.textWithIcon : undefined,
+              textStyle,
             ]}
           >
             {title}

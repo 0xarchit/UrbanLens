@@ -53,6 +53,7 @@ def issue_to_response(issue: Issue) -> IssueResponse:
         city=issue.city,
         locality=issue.locality,
         full_address=issue.full_address,
+        geo_status="Duplicate" if issue.is_duplicate else "Clustered" if issue.geo_cluster_id else "Unique Location",
         sla_hours=issue.sla_hours,
         sla_deadline=issue.sla_deadline,
         created_at=issue.created_at,

@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
+import { useCachedFetch } from "@/hooks/useCachedFetch";
 import {
   HardHat,
   Plus,
@@ -10,6 +11,7 @@ import {
   AlertTriangle,
   TrendingUp,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface Department {
   id: string;
@@ -38,9 +40,10 @@ interface WorkerPerformance {
 }
 
 export default function WorkersPage() {
-  const [workers, setWorkers] = useState<Worker[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: departmentsData, loading: deptLoading, revalidate: revalidateDept } = useCachedFetch<Department[]>("/admin/departments");
+  const { data: workersData, loading: workersLoading, revalidate: revalidateWorkers } = useCachedFetch<Worker[]>("/admin/members");
+  const { data: perfData, loading: perfLoading, revalidate: revalidatePerf } = useCachedFetch<WorkerPerformance[]>("/admin/workers/performance");
+  
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -52,36 +55,28 @@ export default function WorkersPage() {
 
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const departments = departmentsData || [];
+  
+  const workers = useMemo(() => {
+    if (!workersData) return [];
+    const perfMap = new Map((perfData || []).map(p => [p.id, p]));
+    
+    return workersData.map((w) => {
+      const perf = perfMap.get(w.id);
+      return {
+        ...w,
+        resolved_total: perf?.resolved_total || 0,
+        efficiency: perf?.efficiency || 0,
+      };
+    });
+  }, [workersData, perfData]);
 
-  const fetchData = async () => {
-    try {
-      const [deptData, workerData, perfData] = await Promise.all([
-        apiGet<Department[]>("/admin/departments"),
-        apiGet<Worker[]>("/admin/members"),
-        apiGet<WorkerPerformance[]>("/admin/workers/performance").catch(
-          () => [],
-        ),
-      ]);
-      setDepartments(deptData);
+  const loading = deptLoading || workersLoading || perfLoading;
 
-      const mergedWorkers = workerData.map((w) => {
-        const perf = perfData.find((p) => p.id === w.id);
-        return {
-          ...w,
-          resolved_total: perf?.resolved_total || 0,
-          efficiency: perf?.efficiency || 0,
-        };
-      });
-
-      setWorkers(mergedWorkers);
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
-    } finally {
-      setLoading(false);
-    }
+  const refreshAll = () => {
+    revalidateDept();
+    revalidateWorkers();
+    revalidatePerf();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,7 +91,7 @@ export default function WorkersPage() {
         department_id: "",
         role: "worker",
       });
-      fetchData();
+      refreshAll();
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to create worker";
@@ -111,8 +106,16 @@ export default function WorkersPage() {
 
   if (loading) {
     return (
-      <div className="text-slate-600 font-medium">
-        Loading Workforce Data...
+      <div className="space-y-6">
+        <div className="flex justify-between items-center mb-6">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
