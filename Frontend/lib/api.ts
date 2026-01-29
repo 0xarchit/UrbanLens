@@ -1,9 +1,6 @@
 "use client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-if (!API_URL) {
-  throw new Error("Missing NEXT_PUBLIC_API_URL");
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_RETRIES = 2;
 
@@ -42,6 +39,10 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  if (!API_URL) {
+    throw new ApiError("API URL not configured", 500);
+  }
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
