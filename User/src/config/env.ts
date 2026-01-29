@@ -10,4 +10,8 @@ export const config = {
   SUPABASE_URL: extra.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL,
   SUPABASE_ANON_KEY:
     extra.SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+  GOOGLE_CLIENT_ID:
+    extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+    "",
 };

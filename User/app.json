@@ -63,6 +63,7 @@
         "projectId": "your-project-id"
       },
       "EXPO_PUBLIC_API_BASE_URL": "https://0xarchit-urbanlens.hf.space",
+      "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "524731582218-km42fbhaf8ef52lc5lf3vsmef0832rfk.apps.googleusercontent.com",
       "EXPO_PUBLIC_SUPABASE_URL": "https://mqjshnnpnwrwkqxmgysh.supabase.co",
       "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xanNobm5wbndyd2txeG1neXNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMjY1MDEsImV4cCI6MjA4MzcwMjUwMX0.BU2aiiBnHxzgEO6hFTv63JUH07sjQ6BzqhBkYA2CChs"
     }

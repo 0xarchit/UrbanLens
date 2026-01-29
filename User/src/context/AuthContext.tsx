@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { CONFIG_ERROR, supabase } from "../config/supabase";
+import { config } from "../config/env";
 import {
   GoogleSignin,
   statusCodes,
@@ -44,18 +45,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    // Configure Google Sign-In
     try {
       GoogleSignin.configure({
-        webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID, // From .env
+        webClientId: config.GOOGLE_CLIENT_ID,
         scopes: ["email", "profile"],
         offlineAccess: true,
       });
     } catch (e: any) {
       if (e.message?.includes("RNGoogleSignin")) {
-         console.warn("Google Sign-In not supported in Expo Go. Use a development build or 'Dev Mode'.");
+        console.warn(
+          "Google Sign-In not supported in Expo Go. Use a development build or 'Dev Mode'.",
+        );
       } else {
-         console.error("Google Sign-In config error:", e);
+        console.error("Google Sign-In config error:", e);
       }
     }
 
@@ -80,68 +82,73 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signInWithGoogle = async () => {
     try {
-        if (!supabase) {
-            Alert.alert("Configuration Error", "Supabase is not configured.");
-            return;
+      if (!supabase) {
+        Alert.alert("Configuration Error", "Supabase is not configured.");
+        return;
+      }
+
+      setLoading(true);
+
+      // 1. Check Play Services (Android)
+      try {
+        await GoogleSignin.hasPlayServices();
+      } catch (e: any) {
+        if (e.message?.includes("RNGoogleSignin")) {
+          Alert.alert(
+            "Expo Go Detected",
+            "Native Google Sign-In is not supported in Expo Go. Please use 'Dev Mode' or build a development client.",
+          );
+          setLoading(false);
+          return;
         }
+        throw e;
+      }
 
-        setLoading(true);
+      // 2. Native Sign In
+      const userInfo = await GoogleSignin.signIn();
 
-        // 1. Check Play Services (Android)
-        try {
-          await GoogleSignin.hasPlayServices();
-        } catch (e: any) {
-             if (e.message?.includes("RNGoogleSignin")) {
-                Alert.alert("Expo Go Detected", "Native Google Sign-In is not supported in Expo Go. Please use 'Dev Mode' or build a development client.");
-                setLoading(false);
-                return;
-             }
-             throw e;
+      // 3. Get ID Token
+      if (userInfo.data?.idToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: userInfo.data.idToken,
+        });
+
+        if (error) throw error;
+
+        // Critical: Update state immediately to trigger UI refresh
+        if (data.session) {
+          setSession(data.session);
+          setUser(data.session.user);
         }
-
-        // 2. Native Sign In
-        const userInfo = await GoogleSignin.signIn();
-        
-        // 3. Get ID Token
-        if (userInfo.data?.idToken) {
-            const { data, error } = await supabase.auth.signInWithIdToken({
-                provider: "google",
-                token: userInfo.data.idToken,
-            });
-
-            if (error) throw error;
-            
-            // Critical: Update state immediately to trigger UI refresh
-            if (data.session) {
-                setSession(data.session);
-                setUser(data.session.user);
-            }
-        } else {
-            throw new Error("No ID token returned from Google Sign-In");
-        }
-
+      } else {
+        throw new Error("No ID token returned from Google Sign-In");
+      }
     } catch (error: any) {
-        if (isErrorWithCode(error)) {
-            switch (error.code) {
-                case statusCodes.SIGN_IN_CANCELLED:
-                    console.log("User cancelled the login flow");
-                    break;
-                case statusCodes.IN_PROGRESS:
-                    console.log("Sign in is in progress");
-                    break;
-                case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-                    Alert.alert("Error", "Google Play Services not available or outdated.");
-                    break;
-                default:
-                    console.error("Google Sign-In Error:", error);
-                    Alert.alert("Google Sign-In Error", error.message);
-            }
-        } else {
-            console.error("An error occurred:", error);
-            Alert.alert("Sign-In Failed", error.message || "Unknown error");
+      if (isErrorWithCode(error)) {
+        switch (error.code) {
+          case statusCodes.SIGN_IN_CANCELLED:
+            console.log("User cancelled the login flow");
+            break;
+          case statusCodes.IN_PROGRESS:
+            console.log("Sign in is in progress");
+            break;
+          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+            Alert.alert(
+              "Error",
+              "Google Play Services not available or outdated.",
+            );
+            break;
+          default:
+            console.error("Google Sign-In Error:", error);
+            Alert.alert("Google Sign-In Error", error.message);
         }
+      } else {
+        console.error("An error occurred:", error);
+        Alert.alert("Sign-In Failed", error.message || "Unknown error");
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -162,7 +169,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     try {
       setLoading(true);
-      
+
       // Sign out from Google Native SDK first
       try {
         await GoogleSignin.signOut();
