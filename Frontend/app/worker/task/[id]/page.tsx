@@ -2,6 +2,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { apiGet } from "@/lib/api";
+
+export const runtime = "edge";
 import { ArrowLeft, Camera, Navigation, Loader2 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
