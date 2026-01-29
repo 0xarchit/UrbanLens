@@ -17,7 +17,6 @@ RUN pip install --no-cache-dir -r /app/Backend/requirements.txt
 
 COPY Backend/ /app/Backend/
 COPY static/ /app/static/
-COPY yolov8n.pt /app/yolov8n.pt
 
 RUN mkdir -p /app/static/temp
 
